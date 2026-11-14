@@ -1,10 +1,11 @@
-# TerraTrend backend — Pirathee Phases 01–02 / TT-01, TT-05 Part 1
+# TerraTrend backend — Pirathee Phases 01–02 and Gaja TT-04
 
 A runnable FastAPI foundation with typed v1 contracts and a repository integration boundary. Requirements addressed:
 FR-019 (health/errors), NFR-006 (schema validation), NFR-007 (CORS/secrets),
 NFR-008 (request tracing) and NFR-015 (local setup). Catalog readiness portions
 of FR-001/002 remain pending Harith's verified inputs and Phase 02 integration.
-No database, scientific calculations, data import, result cache or frontend code.
+No database, data import, result cache or frontend implementation. Gaja's standalone
+TT-04 engine supplies scientific calculations; HTTP integration remains pending.
 
 ## Local setup (Python 3.12)
 
@@ -119,7 +120,7 @@ Remote GitHub Actions runs require a later explicitly authorized commit/push.
 ## Phase boundaries
 
 Harith owns `app/data/` and real snapshots/manifests. Gaja owns `app/statistics/`.
-Their directories are unchanged. There are no analysis, comparison, export or
+TT-04 implements Gaja's statistics package independently. There are no analysis, comparison, export or
 retrieval routes yet. Future result IDs use a process-local short-lived cache:
 restart loses IDs (404), and multi-replica caching is outside P0. That cache is not
 implemented in this phase. The current team decision is no database in P0,
@@ -193,3 +194,17 @@ The backend CI workflow is unchanged: main pushes and relevant PRs run it; featu
 pushes do not. It also permits manual backend-only workflow dispatch.
 
 [Phase 02 verification and GitHub delivery report](PHASE02_REPORT.md).
+
+
+## Gaja TT-04 statistical engine
+
+`app.statistics` provides pure, typed `aggregate_annual_precipitation` and
+`analyze_annual_trend` functions, immutable inputs/results, explicit data errors,
+OLS, Sen slope/95% CI, original tie-corrected Mann–Kendall and residual diagnostics.
+Inputs must already be normalized monthly totals in mm; no rate conversion occurs.
+The engine requires ten complete years and guards significance when assumptions
+cannot be assessed or residual dependence is flagged. No HTTP route was added.
+
+NumPy/SciPy runtime and PyMannKendall test-reference dependencies are pinned in the
+existing requirements/lock files. Existing install/test commands remain valid.
+[Statistical methods, limitations, examples and verification](STATISTICS_MODULE_REPORT.md).
