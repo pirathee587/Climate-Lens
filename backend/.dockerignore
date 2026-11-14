@@ -14,3 +14,14 @@ coverage
 *.key
 .netrc
 .urs_cookies
+**/__pycache__
+**/*.py[cod]
+**/.venv
+**/.pytest_cache
+**/.ruff_cache
+**/*.pem
+**/*.key
+**/.netrc
+**/.urs_cookies
+tests
+requirements-dev.*
