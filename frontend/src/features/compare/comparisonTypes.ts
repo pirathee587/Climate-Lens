@@ -49,7 +49,10 @@ export interface ComparisonAnnualRecord {
   valid_months: number;
 }
 
-export type SenSlopeConfidenceInterval = readonly [number | null, number | null];
+export type SenSlopeConfidenceInterval = readonly [
+  number | null,
+  number | null,
+];
 
 export interface ComparisonStatistics {
   sample_years: number | null;
@@ -90,6 +93,8 @@ export interface IndependentComparisonAnalysis {
 /** Mirrors POST /api/v1/comparisons from docs/API_SPEC.md. */
 export interface ComparisonResponse {
   shared_requested_period: ComparisonPeriod;
+  /** Backend-provided intersection of complete years; optional for adapter compatibility. */
+  shared_analyzed_years?: readonly number[];
   dataset_compatibility: ComparisonDatasetCompatibility;
   left: IndependentComparisonAnalysis;
   right: IndependentComparisonAnalysis;
