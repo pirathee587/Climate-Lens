@@ -1,139 +1,78 @@
-# TerraTrend — Earth Systems Trend Detective
+# TerraTrend — Climate Lens
 
-**Industry-style project documentation package | v1.0 | 14 November 2026**  
-**Challenge:** NASA Space Apps Challenge 2026 — *Be an Earth Systems Trend Detective!*  
-**Team:** Pirathee, Harith, Gaja, Shinthurie, Kavishanth, Aiya (6 members).  
-**Status:** Proposed and documented, not implemented. This repository package contains **documentation only**.
+TerraTrend investigates regional precipitation trends using a FastAPI backend and
+NASA-derived, independently reviewed snapshots. The backend owns annual aggregation,
+OLS/Sen/Mann–Kendall analysis, comparison and CSV/provenance exports. React/Vite UI,
+charts and maps belong to their frontend owners. Trend evidence does not prove a cause
+or a significant difference between regional slopes.
 
-## Executive project overview
+**Phase 05: INFRASTRUCTURE-READY BUT INTEGRATION BLOCKED.**
+Hosted hardened backend/Compose checks pass; frontend application checks are skipped.
+This branch has the working Phase 01–04 backend and Phase 05 container/CI preparation.
+The real frontend scaffold is still on `feat/tt-06-frontend-scaffold`; main contains
+map/comparison components but no package.json, lockfile or Vite entry point. It has
+not been automatically merged or replaced. Independently reviewed real NASA artifacts
+and quality policies are also missing: production health is 200, catalogs and valid
+analysis/comparison requests return 503 DATASET_UNAVAILABLE. No fake NASA fallback.
 
-**TerraTrend** is a web-based scientific investigation application helping students and interested members of the public examine environmental change in authentic NASA Earth observation data. The MVP concentrates on **precipitation** using NASA's GPM IMERG Final monthly product. A user selects a supported region and time range, views monthly rainfall and annual totals, inspects the rate and direction of a trend, and assesses statistical significance with a documented method. Users can compare two locations to see whether patterns differ geographically.
-
-**Primary research question:** *How has annual precipitation changed in the Jaffna area versus the Colombo area over the same complete calendar years, and how strong is the statistical evidence for each trend?*
-
-**Four scientific outputs:** what changed; where; how much (units/year); and whether evidence meets the chosen significance threshold. **A statistically significant association is not proof of a cause** and the app must never make causal claims.
-
-### Scope snapshot
-
-| In the 48-hour MVP (P0) | Only if time allows (P1) | After the hackathon (P2) |
-|---|---|---|
-| Genuine, versioned NASA precipitation data | Draw a custom bounded rectangle on the map | More datasets: GLDAS, MERRA-2, MODIS |
-| Two reproducible regional NASA snapshots | Download PDF report | AI variable suggestions |
-| Monthly and annual time-series charts | Refresh from NASA cloud on demand | Pixel-wise significance maps |
-| OLS slope, Sen slope + CI, Mann–Kendall p-value | Extra third region | Authentication, collaboration, PostGIS |
-| Two-region comparison with separate findings | Docker Compose deployment | Advanced seasonal/autocorrelation modeling |
-| Data provenance, caveats, CSV export, validation/tests | Additional explanations | Larger distributed processing |
-
-**Definitions:** P0 = must complete; P1 = optional; P2 = explicitly out of scope. Users may select only variables/regions backed by functioning data. Do not advertise unsupported features as available.
-
-## The six-member ownership map
-
-| Person | Ownership | Scope | Definition of contribution |
-|---|---|---|---|
-| **Pirathee** | FastAPI backend, API contracts, integration, deployment | Large | Working APIs, integrated demo and production-style error handling |
-| **Harith** | NASA dataset acquisition, preprocessing, provenance | Large | Two verifiable, documented real-data regional snapshots |
-| **Gaja** | Statistical analysis and scientific validation | Medium | Tested OLS/MK/Sen methods and clear cautions |
-| **Shinthurie** | Frontend application and charts | Medium | Working investigator UI and results visualization |
-| **Kavishanth** | Geographical selector and region comparison UI | Medium | Two mapped regions and side-by-side comparison view |
-| **Aiya** | Test checklist, documentation polish, presentation support | **Small** | Demo checklist, documentation verification, bug reports; no critical-path feature |
-
-See [docs/TEAM_PLAN.md](docs/TEAM_PLAN.md) for exact tasks and dependencies. All five technical owners test the code they submit; Aiya's review supplements, but does not block, engineering ownership.
-
-## Architecture at a glance
-
-```mermaid
-flowchart TD
-  U[Student / researcher] --> F[React + TypeScript / Vite UI]
-  F -->|HTTPS JSON| A[Python FastAPI application]
-  A --> D[Verified NASA snapshot adapter]
-  A --> S[Scientific statistics module]
-  A --> C[Local metadata cache / SQLite]
-  D --> P[(Versioned CSV + provenance JSON)]
-  E[NASA Earthdata Cloud / Giovanni] -.->|Preprocessing outside demo runtime| P
-  F --> M[Leaflet regional map]
-  F --> V[Recharts plots and comparison]
-```
-
-**Architecture decision:** one FastAPI service rather than microservices; a complete offline snapshot mode is mandatory so the demo does not rely on live satellite API availability or credentials. No authentication is needed for the non-personal, read-only MVP.
-
-## Proposed repository layout (future source tree)
-
-```text
-terratrend/
-├── README.md                  # this overview
-├── AGENTS.md                  # Warp-recognized project rules
-├── WARP.md                    # detailed AI-assisted coding playbook
-├── docs/
-│   ├── PROJECT_OVERVIEW.md   # executive project charter
-│   ├── SRS.md                # formal software requirements specification
-│   ├── SCOPE.md              # boundaries, priorities, acceptance
-│   ├── ARCHITECTURE.md       # views, workflows, ADRs, data flow
-│   ├── TECH_STACK.md         # technology selection and setup
-│   ├── TEAM_PLAN.md          # six-member responsibilities
-│   ├── API_SPEC.md           # HTTP/JSON API contract
-│   ├── SCIENTIFIC_METHOD.md   # scientifically defensible calculations
-│   ├── DATA_SOURCES.md       # NASA resources, provenance, access strategy
-│   ├── TEST_STRATEGY.md      # test plan and requirements traceability
-│   ├── DELIVERY_PLAN.md      # 48-hour schedule, GitHub issues, risks
-│   └── RESOURCES.md          # official resources and citations
-├── frontend/                  # future React application — NOT created here
-├── backend/                   # future FastAPI source — NOT created here
-├── data/demo/                 # future verified snapshot files — NOT provided here
-└── .github/workflows/         # future CI — NOT created here
-```
-
-## Core workflow
-
-1. Choose **precipitation**, a **Jaffna-area** or **Colombo-area** preset, and a historical year range (default: **2001–2024**, contingent on data verification).
-2. Read real NASA-derived monthly observations from a vetted versioned snapshot; display collection, version, original variable, units, dates, ROI, conversion and retrieval information.
-3. Convert original monthly mean rainfall rates (if `mm/hr`) to monthly rainfall totals (`mm`) according to actual month length; retain missing-data warnings.
-4. Aggregate **12 valid months** into each annual total, then estimate the change in annual rainfall (`mm/year`) and evaluate evidence for a trend across complete years.
-5. Render the chart, fitted line, uncertainty, sample length, p-value, and plain-language interpretation; compare a second region without implying a formal statistical test of *between-region difference*.
-6. Export the observational series and provenance as CSV/JSON.
-
-## Proposed start commands (once source code exists)
+## Start the available backend
 
 ```bash
-# Backend (proposed)
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-
-# Frontend (proposed, in a second terminal)
-cd frontend
-npm ci
-npm run dev
+docker compose config --quiet
+docker compose up --detach --build --wait backend
+curl http://127.0.0.1:8000/health
+docker compose down --timeout 15
 ```
 
-These commands describe the intended repository after implementation. **No `requirements.txt`, UI, backend application, NASA observations, or active deployments are supplied in this documentation-only package.**
+Requires a Docker runtime supporting no-new-privileges and Compose 2.24.4+. Current
+local Snap Docker has a documented flag incompatibility; exact hosted validation
+and any local diagnostic limits are recorded in the Phase 05 report. Starting the
+whole stack remains blocked until the real frontend is merged and verified.
 
-## Success criteria
+For local Python setup, development Compose, environment variables, browser API URL,
+CORS, read-only snapshots, cache constraints and troubleshooting, read
+[deployment preparation](docs/DEPLOYMENT.md) and [backend instructions](backend/README.md).
+No deployment has occurred and no database is required.
 
-- At least two verifiable snapshots from the *same* NASA product/version/run and an identical overlapping date window.
-- Source metadata and extraction workflow included; no made-up rainfall observations.
-- API/UI accepts selected supported regions and successfully returns real time-series data.
-- Correct unit conversions, complete-year filtering and statistical outputs with confidence intervals.
-- Two-region comparison shows *independent* region-level conclusions.
-- Tests pass and demo works while disconnected from NASA services.
+## APIs and verification
 
-## Documentation index
+The backend implements health, verified variable/region catalogs, analysis,
+independent regional comparison, application-local result retrieval, monthly/annual
+CSV and metadata downloads. See [API contracts](docs/API_SPEC.md). Result IDs expire
+and are lost on restart; use one backend worker. Each scientific result retains
+actual source metadata, complete-year counts and inference warnings.
 
-- [Industry-standard project overview](docs/PROJECT_OVERVIEW.md)
-- [Full SRS](docs/SRS.md)
-- [Scope and non-goals](docs/SCOPE.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Technology stack](docs/TECH_STACK.md)
-- [Team responsibilities](docs/TEAM_PLAN.md)
-- [API contract](docs/API_SPEC.md)
-- [Statistics and methods](docs/SCIENTIFIC_METHOD.md)
-- [Data sourcing and reproducibility](docs/DATA_SOURCES.md)
-- [Verification and QA](docs/TEST_STRATEGY.md)
-- [GitHub issue plan and milestones](docs/DELIVERY_PLAN.md)
-- [Official resource links](docs/RESOURCES.md)
-- [Warp agent guidance](WARP.md) and [agent rules](AGENTS.md)
+```bash
+python3 scripts/check_compose.py
+python3 -m unittest discover -s scripts/tests -v
+bash scripts/smoke-stack.sh production backend
+bash scripts/smoke-stack.sh development backend
+```
 
-## Limitations, ethics and attribution
+Backend lint/tests/audit instructions: [backend README](backend/README.md).
+Frontend checks and full-stack smoke are NOT TESTED while its scaffold is absent.
+Workflow readiness success does not establish frontend test/build success.
 
-This is a **student prototype** for a challenge; it is not an official NASA service, a weather forecast, or evidence of the causes of environmental changes. Satellite-derived estimates contain uncertainty, and monthly/annual aggregation can hide important variation. NASA data products and any map tiles must be attributed appropriately. Do not expose Earthdata credentials or API secrets. **Do not present illustrative UI figures as measured data.**
+## Team and requirements
+
+- Pirathee: FastAPI integration, Docker/Compose, CI and deployment preparation.
+- Harith: genuine NASA acquisition, transformations, provenance and snapshots.
+- Gaja: statistical engine and scientific validation.
+- Shinthurie: frontend scaffold, dashboard, API client and charts.
+- Kavishanth: map, region selection and comparison interface.
+- Aiya: supplementary manual QA, documentation and demo support.
+
+[Scope](docs/SCOPE.md), [SRS](docs/SRS.md), [architecture](docs/ARCHITECTURE.md),
+[scientific methods](docs/SCIENTIFIC_METHOD.md), [sources](docs/DATA_SOURCES.md),
+[test strategy](docs/TEST_STRATEGY.md), [team plan](docs/TEAM_PLAN.md) and
+[delivery plan](docs/DELIVERY_PLAN.md) describe requirements and ownership. Older
+baseline documents contain proposed architecture; current phase reports distinguish
+implemented behavior from missing source data and integration prerequisites.
+
+[Phase 03 report](backend/PHASE03_REPORT.md) ·
+[Phase 04 report](backend/PHASE04_REPORT.md) ·
+[Phase 05 report](backend/PHASE05_REPORT.md)
+
+No frontend, data or statistics ownership is transferred by infrastructure changes.
+Full browser E2E, verified-source offline demonstration and release acceptance remain
+later work; no cloud deployment, PR or main merge is performed by Phase 05 delivery.

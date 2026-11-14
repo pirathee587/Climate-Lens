@@ -14,3 +14,11 @@ coverage
 *.key
 .netrc
 .urs_cookies
+
+**/node_modules
+**/dist
+**/*earthdata*credentials*
+**/approvals*.json
+**/*quality*policies*.json
+.coverage*
+htmlcov

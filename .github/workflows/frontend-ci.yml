@@ -10,32 +10,47 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  frontend:
+  readiness:
     runs-on: ubuntu-latest
+    outputs:
+      available: ${{ steps.source.outputs.available }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Detect Phase 02 readiness
-        id: ready
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Report actual application availability
+        id: source
         shell: bash
         run: |
-          if [[ -f frontend/package.json ]]; then
+          if [[ -f frontend/package.json || -f frontend/package-lock.json || -f frontend/index.html ]]; then
+            test -f frontend/package.json
             test -f frontend/package-lock.json
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            test -f frontend/index.html
+            echo 'available=true' >> "$GITHUB_OUTPUT"
           else
-            echo "Phase 01: frontend lint, types, build and audit pending application initialization." >> "$GITHUB_STEP_SUMMARY"
+            echo 'available=false' >> "$GITHUB_OUTPUT"
+            echo 'BLOCKED: frontend scaffold absent. Frontend lint, typecheck, tests, build and audit are NOT TESTED. Merge the reviewed owner scaffold before integration.' >> "$GITHUB_STEP_SUMMARY"
           fi
-      - uses: actions/setup-node@v4
-        if: steps.ready.outputs.enabled == 'true'
+  frontend:
+    needs: readiness
+    if: needs.readiness.outputs.available == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Install, lint, typecheck, build and audit
-        if: steps.ready.outputs.enabled == 'true'
-        working-directory: frontend
-        run: |
-          npm ci
-          npm run lint
-          npm run typecheck
-          npm run build
-          npm audit --audit-level=high
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test -- --run
+      - run: npm run build
+      - run: npm audit --audit-level=high
