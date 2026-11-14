@@ -71,11 +71,41 @@ describe("comparison validation", () => {
     const response = {
       shared_requested_period: { start_year: 2001, end_year: 2024 },
       left: {
-        annual: [null, { year: Number.NaN, precipitation_total_mm: 1, valid_months: 12 }],
+        annual: [
+          null,
+          { year: Number.NaN, precipitation_total_mm: 1, valid_months: 12 },
+        ],
       },
       right: { annual: [] },
     } as unknown as ComparisonResponse;
 
     expect(getCommonCompleteYears(response)).toEqual([]);
+  });
+
+  it("uses backend shared years when present and rejects inconsistent values", () => {
+    const response = {
+      shared_requested_period: { start_year: 2001, end_year: 2002 },
+      shared_analyzed_years: [2001, 2002],
+      left: {
+        annual: [
+          { year: 2001, precipitation_total_mm: 100, valid_months: 12 },
+          { year: 2002, precipitation_total_mm: 110, valid_months: 12 },
+        ],
+      },
+      right: {
+        annual: [
+          { year: 2001, precipitation_total_mm: 120, valid_months: 12 },
+          { year: 2002, precipitation_total_mm: 130, valid_months: 12 },
+        ],
+      },
+    } as unknown as ComparisonResponse;
+
+    expect(getCommonCompleteYears(response)).toEqual([2001, 2002]);
+    expect(
+      getCommonCompleteYears({
+        ...response,
+        shared_analyzed_years: [2002, 2001],
+      }),
+    ).toEqual([]);
   });
 });

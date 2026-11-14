@@ -34,7 +34,38 @@ CORS, read-only snapshots, cache constraints and troubleshooting, read
 [deployment preparation](docs/DEPLOYMENT.md) and [backend instructions](backend/README.md).
 No deployment has occurred and no database is required.
 
-## APIs and verification
+```text
+terratrend/
+├── README.md                  # this overview
+├── AGENTS.md                  # Warp-recognized project rules
+├── WARP.md                    # detailed AI-assisted coding playbook
+├── docs/
+│   ├── PROJECT_OVERVIEW.md   # executive project charter
+│   ├── SRS.md                # formal software requirements specification
+│   ├── SCOPE.md              # boundaries, priorities, acceptance
+│   ├── ARCHITECTURE.md       # views, workflows, ADRs, data flow
+│   ├── TECH_STACK.md         # technology selection and setup
+│   ├── TEAM_PLAN.md          # six-member responsibilities
+│   ├── API_SPEC.md           # HTTP/JSON API contract
+│   ├── SCIENTIFIC_METHOD.md   # scientifically defensible calculations
+│   ├── DATA_SOURCES.md       # NASA resources, provenance, access strategy
+│   ├── TEST_STRATEGY.md      # test plan and requirements traceability
+│   ├── DELIVERY_PLAN.md      # 48-hour schedule, GitHub issues, risks
+│   └── RESOURCES.md          # official resources and citations
+├── frontend/                  # React + TypeScript app (TT-06/07/08/09) — see frontend/README.md
+├── backend/                   # future FastAPI source — NOT created here
+├── data/demo/                 # future verified snapshot files — NOT provided here
+└── .github/workflows/         # future CI — NOT created here
+```
+
+## Core workflow
+
+1. Choose **precipitation**, a **Jaffna-area** or **Colombo-area** preset, and a historical year range (default: **2001–2024**, contingent on data verification).
+2. Read real NASA-derived monthly observations from a vetted versioned snapshot; display collection, version, original variable, units, dates, ROI, conversion and retrieval information.
+3. Convert original monthly mean rainfall rates (if `mm/hr`) to monthly rainfall totals (`mm`) according to actual month length; retain missing-data warnings.
+4. Aggregate **12 valid months** into each annual total, then estimate the change in annual rainfall (`mm/year`) and evaluate evidence for a trend across complete years.
+5. Render the chart, fitted line, uncertainty, sample length, p-value, and plain-language interpretation; compare a second region without implying a formal statistical test of *between-region difference*.
+6. Export the observational series and provenance as CSV/JSON.
 
 The backend implements health, verified variable/region catalogs, analysis,
 independent regional comparison, application-local result retrieval, monthly/annual

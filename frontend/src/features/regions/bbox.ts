@@ -39,9 +39,7 @@ export function bboxToLeafletBounds(
 export function getCombinedLeafletBounds(
   regions: readonly RegionPreset[],
 ): LeafletRegionBounds | null {
-  const validBBoxes = regions
-    .map((region) => region.bbox)
-    .filter(isValidBBox);
+  const validBBoxes = regions.map((region) => region.bbox).filter(isValidBBox);
 
   if (validBBoxes.length === 0) {
     return null;

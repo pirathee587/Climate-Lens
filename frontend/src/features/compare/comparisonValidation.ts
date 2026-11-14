@@ -69,7 +69,7 @@ export function getCommonCompleteYears(
       .filter((year) => year >= startYear && year <= endYear),
   );
 
-  return [
+  const derivedYears = [
     ...new Set(
       (response.right?.annual ?? [])
         .filter(isCompleteAnnualRecord)
@@ -77,6 +77,27 @@ export function getCommonCompleteYears(
         .filter((year) => leftYears.has(year)),
     ),
   ].sort((left, right) => left - right);
+
+  if (response.shared_analyzed_years !== undefined) {
+    const providedYears = response.shared_analyzed_years;
+    const isValidProvidedYears =
+      Array.isArray(providedYears) &&
+      providedYears.every(
+        (year, index) =>
+          Number.isInteger(year) &&
+          year >= startYear &&
+          year <= endYear &&
+          (index === 0 ||
+            (providedYears[index - 1] !== undefined &&
+              year > providedYears[index - 1])),
+      ) &&
+      providedYears.length === derivedYears.length &&
+      providedYears.every((year, index) => year === derivedYears[index]);
+
+    return isValidProvidedYears ? providedYears : [];
+  }
+
+  return derivedYears;
 }
 
 export function getAvailableYears(

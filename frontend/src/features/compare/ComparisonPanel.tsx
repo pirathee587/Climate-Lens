@@ -41,8 +41,7 @@ function getInitialSelection(
     leftRegionId: initialSelection?.leftRegionId ?? "",
     rightRegionId: initialSelection?.rightRegionId ?? "",
     startYear: initialSelection?.startYear ?? available[0] ?? "",
-    endYear:
-      initialSelection?.endYear ?? available[available.length - 1] ?? "",
+    endYear: initialSelection?.endYear ?? available[available.length - 1] ?? "",
   };
 }
 
@@ -59,7 +58,7 @@ function toApiError(error: unknown): ComparisonApiError {
     const apiError = error.error as Partial<ComparisonApiError>;
     return {
       code: typeof apiError.code === "string" ? apiError.code : undefined,
-      message: apiError.message,
+      message: error.error.message,
       details: apiError.details,
       request_id:
         typeof apiError.request_id === "string"
@@ -165,8 +164,13 @@ export function ComparisonPanel({
     response !== null && hasIncompatibleDataset(response.dataset_compatibility);
 
   return (
-    <section aria-labelledby="comparison-panel-heading">
-      <h2 id="comparison-panel-heading">Regional comparison</h2>
+    <section aria-labelledby="comparison-panel-heading" className="space-y-5">
+      <h2
+        className="text-xl font-semibold text-slate-900 sm:text-2xl"
+        id="comparison-panel-heading"
+      >
+        Regional comparison
+      </h2>
       <ComparisonControls
         availableYears={years}
         disabled={state.status === "loading"}
@@ -197,32 +201,42 @@ export function ComparisonPanel({
 
       {response ? (
         <>
-          <p>
+          <p className="text-sm text-slate-700">
             Requested period: {response.shared_requested_period.start_year}–
             {response.shared_requested_period.end_year}.
           </p>
           {incompatibleDataset ? (
-            <p role="alert">
+            <p
+              className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+              role="alert"
+            >
               The returned datasets are not fully compatible for a like-for-like
               comparison.
             </p>
           ) : null}
           {insufficientCommonYears ? (
-            <p role="alert">
+            <p
+              className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+              role="alert"
+            >
               Fewer than {MINIMUM_COMPLETE_YEARS} common complete years were
               returned; interpret the comparison as insufficient data.
             </p>
           ) : null}
           {(response.warnings ?? []).map((warning, index) => (
-            <p key={`${index}-${warning}`} role="note">
+            <p
+              className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"
+              key={`${index}-${warning}`}
+              role="note"
+            >
               {warning}
             </p>
           ))}
-          <p role="note">
+          <p className="text-sm text-slate-600" role="note">
             The two trend tests are independent. This interface does not test
             whether the two slopes differ significantly.
           </p>
-          <div>
+          <div className="grid gap-6 lg:grid-cols-2">
             <ComparisonStats
               analysis={response.left}
               commonYears={commonYears}
