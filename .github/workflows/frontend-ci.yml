@@ -1,0 +1,41 @@
+name: Frontend CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect Phase 02 readiness
+        id: ready
+        shell: bash
+        run: |
+          if [[ -f frontend/package.json ]]; then
+            test -f frontend/package-lock.json
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Phase 01: frontend lint, types, build and audit pending application initialization." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.ready.outputs.enabled == 'true'
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install, lint, typecheck, build and audit
+        if: steps.ready.outputs.enabled == 'true'
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run lint
+          npm run typecheck
+          npm run build
+          npm audit --audit-level=high

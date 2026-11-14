@@ -1,0 +1,48 @@
+name: Docker build
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose config --quiet
+      - run: docker compose -f compose.yaml -f compose.dev.yaml config --quiet
+  images:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [frontend, backend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect build readiness
+        id: ready
+        shell: bash
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: |
+          if [[ "$SERVICE" == frontend && -f frontend/package.json ]]; then
+            test -f frontend/package-lock.json
+            test -f frontend/index.html
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$SERVICE" == backend && -f backend/requirements.txt ]]; then
+            test -f backend/app/main.py
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Phase 01: $SERVICE image build pending application and dependencies." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Build production and development images (no push)
+        if: steps.ready.outputs.enabled == 'true'
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: |
+          docker build --target production --tag "terratrend-$SERVICE:ci" "$SERVICE"
+          docker build --target development --tag "terratrend-$SERVICE:dev-ci" "$SERVICE"

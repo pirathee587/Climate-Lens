@@ -1,0 +1,218 @@
+Antigravity Master Prompt — TerraTrend Phase 01: Repository Structure, Complete Documentation & Docker/CI Foundation
+Paste everything under PROMPT START into Google Antigravity Agent mode. Before running, put the existing TerraTrend_Full_Documentation.md (the consolidated file) into the workspace root, or attach it so the agent can read its exact contents. This is Phase 01 ONLY: folders, source-controlled placeholders, documentation extraction, and consistency checks — no application implementation.
+
+PROMPT START
+You are the principal software architect and senior repository-initialization engineer for TerraTrend, a six-member student team project for the 2026 NASA Space Apps Challenge — Be an Earth Systems Trend Detective!
+
+TASK: Initialize an industry-standard monorepo folder structure in the CURRENT workspace and materialize ALL 15 original .md documentation files from the already-provided consolidated master document. Perform this task NOW in the workspace. Do not just describe a structure or give shell commands; actually create the files and folders if workspace write access is available.
+0. Highest-priority operating boundaries
+- This is Phase 01: repository and documentation scaffolding ONLY. Do not implement React views, FastAPI endpoints, statistics, NASA data adapters, real NASA data downloads, database schemas/migrations, production deployment or authentication. Starter Dockerfiles, Compose and CI/security workflows are explicitly authorized by the updated Phase 01 request.
+- Do not run npm create, npm install, pip install, git init, git commit, git push, deployments, or cloud-resource provisioning. Do not create GitHub issues or PRs.
+- Never fabricate NASA observations, sample numerical scientific findings, product metadata, p-values, source citations, or verification outcomes. Do not insert fake CSV data.
+- Work inside the current workspace; never delete unrelated files. Respect existing project files and do not overwrite content silently. If the workspace already contains one of the target docs, compare it with the authoritative extracted source before deciding whether to update it; report conflicts first.
+- If the consolidated file cannot be read, STOP and explain that TerraTrend_Full_Documentation.md must be attached or copied to the workspace. Do not invent SRS, API specs, responsibilities, or reference links from memory.
+- Treat TerraTrend_Full_Documentation.md as the exact content source and preserve its science, API, scope and priority decisions.
+1. Required project context (DO NOT CHANGE)
+Project name: TerraTrend — Earth Systems Trend Detective
+
+Primary goal: Help users analyze authentic NASA Earth-observation precipitation, displaying WHAT is changing, WHERE, HOW MUCH, and whether each trend is statistically significant.
+
+P0 MVP: NASA GPM IMERG Final monthly precipitation; two verified Jaffna-area and Colombo-area region presets; complete-calendar-year rainfall aggregation; time-series charts; OLS, Sen slope and confidence interval, Mann–Kendall significance test; two-region comparisons with independent trend findings; documented provenance and CSV export; offline demo using verified NASA-derived snapshots.
+
+P1 optional: rectangle-on-map selection, PDF report, third verified region, on-demand NASA cloud refresh, Docker Compose.
+
+P2 out of scope: more Earth science variables/datasets, AI recommendations, user login, advanced climate inference, complex microservices and PostGIS.
+
+Team assignments (retain exact spelling and responsibilities):
+Member	Ownership	Size
+Pirathee	FastAPI backend, API contracts, integration and deployment	Large
+Harith	NASA precipitation acquisition, preprocessing, provenance	Large
+Gaja	Statistical methods and scientific tests	Medium
+Shinthurie	React dashboard, investigation flow, charts	Medium
+Kavishanth	Leaflet geographical preset selector, comparison UI	Medium
+Aiya	Documentation, manual QA, demo support	Small — no critical-path feature
+
+
+Chosen stack: React + TypeScript + Vite + Tailwind + Leaflet + Recharts; Python 3.12 + FastAPI + Pydantic + Pandas/NumPy/SciPy/pytest; JSON/CSV snapshot files and metadata, optional SQLite. Do not introduce Spring Boot, Redis, Kafka, Kubernetes, PostgreSQL or AI services as initial requirements.
+2. Input files and documentation extraction — mandatory
+Locate TerraTrend_Full_Documentation.md in the workspace or provided attachments. The file contains a consolidated introduction and 15 explicitly labeled original documents. Each original starts with an HTML comment such as:
+<!-- Source: README.md -->
+Subsequent sections start with their own <!-- Source: relative/path.md --> marker. Some source sections have horizontal-rule separators before the next marker. Split by the exact source markers; extract the content from after each marker until just before the next marker; remove only the consolidation separators that do not belong to the original source. Preserve all original paragraphs, requirements, Markdown tables, Mermaid fences, code fences, diagrams, NASA links, filenames, issue IDs, and technical claims. Do not summarize, reword, or simplify the source. Use original standalone files from TerraTrend_Complete_Project_Documentation.zip as an alternative only if the consolidated source cannot be reliably split AND the ZIP is available; otherwise explain the blocker instead of generating replacements.
+
+Create these exact 15 documents at these exact relative paths:
+1. README.md
+2. docs/PROJECT_OVERVIEW.md
+3. docs/SRS.md
+4. docs/SCOPE.md
+5. docs/ARCHITECTURE.md
+6. docs/TECH_STACK.md
+7. docs/TEAM_PLAN.md
+8. docs/API_SPEC.md
+9. docs/SCIENTIFIC_METHOD.md
+10. docs/DATA_SOURCES.md
+11. docs/TEST_STRATEGY.md
+12. docs/DELIVERY_PLAN.md
+13. docs/RESOURCES.md
+14. WARP.md
+15. AGENTS.md
+Copy the full consolidated source (unmodified) to docs/reference/TerraTrend_Full_Documentation.md as an archival reference for easy audit, unless the user-provided master is already at this location. The split individual documents should be the normal reading path; the reference copy is archival and should not replace them.
+
+Documentation integrity criteria:
+- Every original source marker corresponds to exactly one output document, with no duplicates or missing files.
+- The formal SRS retains functional requirement IDs and non-functional requirements.
+- API spec retains exact method/path contracts and JSON examples.
+- Architecture retains Mermaid diagrams and dependency boundaries.
+- Team plan retains all six owners and the small scope for Aiya.
+- Resources retain official NASA and technical documentation links.
+- No sections are silently truncated by token limits or overwritten with placeholder text.
+- README relative links to docs/*.md, WARP.md and AGENTS.md resolve to real files.
+3. Create this scaffold directory tree
+Use this structure, keeping empty directories version-control-visible via .gitkeep. Create directories first, then docs, then minimal configuration/template files.
+terratrend/                          # CURRENT WORKSPACE ROOT (do not nest if already inside repo)
+├── README.md
+├── AGENTS.md
+├── WARP.md
+├── .gitignore
+├── .editorconfig
+├── docs/
+│   ├── PROJECT_OVERVIEW.md
+│   ├── SRS.md
+│   ├── SCOPE.md
+│   ├── ARCHITECTURE.md
+│   ├── TECH_STACK.md
+│   ├── TEAM_PLAN.md
+│   ├── API_SPEC.md
+│   ├── SCIENTIFIC_METHOD.md
+│   ├── DATA_SOURCES.md
+│   ├── TEST_STRATEGY.md
+│   ├── DELIVERY_PLAN.md
+│   ├── RESOURCES.md
+│   └── reference/
+│       └── TerraTrend_Full_Documentation.md
+├── frontend/
+│   ├── .env.example
+│   ├── public/
+│   │   └── .gitkeep
+│   ├── src/
+│   │   ├── app/
+│   │   ├── api/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   │   ├── common/
+│   │   │   └── layout/
+│   │   ├── features/
+│   │   │   ├── investigate/          # Shinthurie
+│   │   │   ├── charts/               # Shinthurie
+│   │   │   ├── regions/              # Kavishanth
+│   │   │   └── compare/              # Kavishanth
+│   │   ├── hooks/
+│   │   ├── styles/
+│   │   ├── types/
+│   │   └── utils/
+│   └── tests/
+│       ├── unit/
+│       └── integration/
+├── backend/
+│   ├── .env.example
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── v1/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   ├── data/                      # Harith
+│   │   ├── statistics/                # Gaja
+│   │   └── core/
+│   ├── scripts/                       # NASA data ingestion helper scripts later
+│   └── tests/
+│       ├── unit/
+│       └── integration/
+├── data/
+│   └── demo/
+│       ├── README.md                  # NEW small instructions; not a NASA data file
+│       ├── snapshots/                # Verified CSVs by Harith later
+│       └── manifests/                # Verified provenance by Harith later
+├── scripts/
+└── .github/
+    └── workflows/
+Directory conventions:
+- Keep normal Python package boundaries clear in future implementation; do not implement any Python code now. Empty __init__.py files are acceptable solely to mark Python packages if you choose, but no route or analysis functionality.
+- Add .gitkeep in all otherwise-empty leaf directories, not necessarily every parent directory.
+- Do not create duplicate directories (for example, terratrend/terratrend/ inside an existing TerraTrend workspace).
+- Do not create .md files in arbitrary places outside those requested except the additional data/demo/README.md template described below.
+- Do not pretend to have functioning apps. In particular do not create a misleading package-lock.json, dependency lockfile, requirements.txt without an actual verified dependency setup.
+4. Minimal non-functional configuration files
+.gitignore must include sensible rules for at least:
+- Python: __pycache__/, *.py[cod], .venv/, .pytest_cache/, .ruff_cache/
+- JS/TS: node_modules/, dist/, .vite/, coverage artifacts
+- editor/OS generated files
+- .env and local variants, while explicitly allowing .env.example
+- log files and local SQLite database files
+- private keys and local NASA credentials
+- generated downloads, temporary files, and very large raw satellite artifacts (without ignoring the data/demo/README.md, snapshots/.gitkeep, or manifests/.gitkeep files)
+.editorconfig: UTF-8, LF newlines, final newline, 2-space indentation for JS/TS/JSON/YAML/Markdown, 4 spaces for Python. Keep it concise.
+
+backend/.env.example: Include non-secret settings only: APP_ENV, APP_PORT, ALLOWED_ORIGINS, SNAPSHOT_ROOT, LOG_LEVEL, using values consistent with docs/TECH_STACK.md. Do not add live Earthdata credentials.
+
+frontend/.env.example: Include a placeholder base URL VITE_API_BASE_URL=http://localhost:8000/api/v1, no secrets.
+
+data/demo/README.md: Briefly state that this directory is EMPTY until Harith supplies verified NASA-derived data, that snapshots and manifests must be accompanied by provenance/version/units/checksums, and that fake observations must never be labeled NASA data. Link to ../../docs/DATA_SOURCES.md and ../../docs/SCIENTIFIC_METHOD.md using valid relative paths.
+5. Validate the scaffold without implementing application logic
+Perform these checks as far as your available workspace tools permit:
+
+A. Source extraction check
+- Count exactly 15 <!-- Source: ... --> markers in the consolidated document.
+- Confirm the 15 outputs exist at the paths in section 2.
+- Verify the extracted outputs are non-empty and substantial, not 1–2 line placeholders.
+- Compare the extracted contents with the source-marked sections, ignoring only extra consolidation separators and boundary whitespace. If there is a mismatch, fix it or report the exact path and reason.
+B. Directory/checklist check
+- Print the repository tree (exclude .git, node_modules, virtual environments and generated caches).
+- Verify empty placeholder directories are trackable (.gitkeep).
+- Verify the source document's README.md relative doc links resolve.
+- Verify six member names, ownership and Aiya's reduced scope in docs/TEAM_PLAN.md.
+- Ensure scientific guardrails, P0/P1/P2 boundaries, and /api/v1 contracts were preserved exactly from source.
+C. Safety and scope check
+- No fake NASA data files.
+- No passwords, access tokens, .env secrets, or machine-specific paths in committed templates.
+- No application features implemented.
+- No external services provisioned, no package installs, no git commits or pushes.
+6. Reporting format — mandatory final response after making changes
+Return a concise, evidence-based engineering report containing:
+1. Status: COMPLETED, PARTIALLY COMPLETED or BLOCKED.
+2. Source used: path to the exact master documentation file (or original ZIP fallback).
+3. Directory tree: show the new project structure (collapse repeated .gitkeep if necessary).
+4. Markdown extraction: list all 15 original documents, with confirmed existence and exact locations.
+5. Additional files: list .gitignore, .editorconfig, .env.example and data/demo/README.md.
+6. Validation: what was actually checked, with pass/fail and any exceptions. Do not claim tools/tests were run if not run.
+7. Member boundaries: Pirathee/Harith/Gaja/Shinthurie/Kavishanth/Aiya, with Aiya's tasks small.
+8. Next phase recommendation: state only that Phase 02 would initialize the actual FastAPI/React app and implement TT-01 onwards, but DO NOT start Phase 02.
+Critical finish condition: Stop after Phase 01 scaffolding and documentation restoration. Do not proceed to code or implementation without my next explicit prompt.
+
+Updated Phase 01 infrastructure requirements (these supersede earlier exclusions)
+- Create frontend/Dockerfile, frontend/.dockerignore, backend/Dockerfile,
+  backend/.dockerignore, compose.yaml, compose.dev.yaml,
+  .github/workflows/frontend-ci.yml, backend-ci.yml and docker-build.yml.
+- Add .github/workflows/security.yml for secret scanning of Git history and current files.
+- Frontend CI: npm ci, ESLint via npm run lint, TypeScript via npm run typecheck,
+  npm run build and npm audit --audit-level=high.
+- Backend CI: Ruff lint/format, Pytest, pip check and pip-audit, using Python 3.12.
+- Build both production and development Docker targets without pushing images.
+- Validate both Compose configurations even before applications exist.
+- With no dependency manifests, publish an explicit Phase 01 pending summary.
+  Once a manifest exists, missing lockfiles, required scripts, tools or entry points
+  must fail the relevant checks; never hide failures with continue-on-error.
+- Do not fabricate manifests or lockfiles. Phase 02 must provide frontend package.json,
+  package-lock.json, lint/typecheck/build/dev scripts and Vite app, plus backend
+  fully pinned requirements.txt, requirements-dev.txt (Ruff/Pytest/pip-audit),
+  Uvicorn/FastAPI runtime dependencies and app/main.py.
+- Docker Compose remains an optional P1 deployment feature. Phase 01 only creates
+  the foundation. No application features, image publication or deployment.
+- Preserve the 15 source documents verbatim. Explain the newer authorized
+  infrastructure scope separately from the archived original documentation.
+- Report validation actually run and pending runtime checks separately.
+
+PROMPT END
+How to run it
+1. Open the existing TerraTrend workspace in Google Antigravity.
+2. Place the previously supplied TerraTrend_Full_Documentation.md in the workspace root (or attach it to the Agent session).
+3. Paste the prompt above in Agent mode with workspace-write permissions.
+4. Ask Antigravity to show the final file tree and validation report; verify that all 15 original docs are present before asking it to implement any code.

@@ -1,0 +1,31 @@
+# Requires Phase 02 applications and dependency manifests; not runnable in Phase 01.
+name: terratrend
+services:
+  backend:
+    build:
+      context: ./backend
+      target: production
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      APP_ENV: production
+      APP_PORT: "8000"
+      ALLOWED_ORIGINS: http://localhost:5173
+      SNAPSHOT_ROOT: /data/demo
+      LOG_LEVEL: INFO
+    volumes:
+      - ./data/demo:/data/demo:ro
+    security_opt:
+      - no-new-privileges:true
+  frontend:
+    build:
+      context: ./frontend
+      target: production
+      args:
+        VITE_API_BASE_URL: http://localhost:8000/api/v1
+    ports:
+      - "127.0.0.1:5173:8080"
+    depends_on:
+      - backend
+    security_opt:
+      - no-new-privileges:true

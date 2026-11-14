@@ -1,0 +1,17 @@
+# Run: docker compose -f compose.yaml -f compose.dev.yaml up --build
+services:
+  backend:
+    build:
+      target: development
+    environment:
+      APP_ENV: development
+    volumes:
+      - ./backend/app:/app/app:ro
+  frontend:
+    build:
+      target: development
+    ports: !override
+      - "127.0.0.1:5173:5173"
+    volumes:
+      - ./frontend/src:/app/src:ro
+      - ./frontend/public:/app/public:ro

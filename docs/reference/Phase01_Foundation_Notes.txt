@@ -1,0 +1,60 @@
+TerraTrend Phase 01 foundation
+
+The 15 original Markdown documents are restored verbatim (excluding consolidation
+separators and boundary whitespace). The consolidated reference is byte-for-byte
+identical to the supplied attachment. The original README heading Climate-Lens
+remains recoverable from the initial Git commit. TerraTrend is the supplied product
+name; the local workspace and GitHub remote have not been renamed.
+
+The latest user request authorizes Docker and CI starter configuration, overriding
+the older prompt exclusions. Archived documentation still describes the original
+proposed state. Docker deployment remains P1; application implementation is Phase 02.
+Pirathee owns infrastructure/integration, Harith data/provenance, Gaja statistics,
+Shinthurie frontend/charts, Kavishanth maps/comparison, Aiya small documentation/QA.
+
+Activation requirements:
+- frontend/package.json and package-lock.json, with dev/lint/typecheck/build scripts,
+  ESLint and TypeScript dependencies, index.html and Vite application sources.
+- backend/requirements.txt with fully pinned validated runtime dependencies,
+  including FastAPI and Uvicorn; requirements-dev.txt with Ruff, Pytest, pip-audit
+  and relevant test dependencies. Add app/main.py exporting app and real tests.
+- CI explicitly reports pending initialization until manifests exist. These skipped
+  application checks are not evidence of a passing app. Once manifests exist,
+  missing prerequisites and failing checks fail CI. Review branch protection then.
+- npm audit fails on high/critical vulnerabilities; pip-audit fails on reported
+  Python vulnerabilities. Secret scanning runs independently of app readiness.
+- Review and pin action/image digests during release hardening. Image tags here
+  are starter versions, not an immutable supply-chain lock.
+
+Commands AFTER Phase 02 initialization:
+  docker compose up --build
+  docker compose -f compose.yaml -f compose.dev.yaml up --build
+Requires Docker Compose >=2.24.4 for the development ports override.
+UI: http://localhost:5173 ; API: http://localhost:8000/api/v1
+The Vite API URL is browser-visible and baked in at build time. Remote deployment
+must set it to a reachable HTTPS API and configure matching backend CORS origins.
+Compose mounts verified snapshots read-only at /data/demo. No NASA credentials
+or data are supplied. depends_on orders startup; it does not establish API readiness.
+The static Nginx starter serves the root SPA; add routing fallback if client-side
+history routes are introduced. Development mounts src/public and backend app;
+rebuild after dependency or configuration changes.
+
+Validation actually run:
+PASS: 15 extracted documents compared with source sections; substantial content.
+PASS: consolidated reference copied byte-for-byte.
+PASS: README and demo README relative links; all six team names preserved.
+PASS: placeholder leaf directories contain .gitkeep.
+PASS: all four workflow YAML files parse.
+PASS: docker compose config --quiet for production and merged development files.
+NOTE: git diff --check reports three original README Markdown hard line breaks
+(trailing double spaces); preserved intentionally for exact documentation fidelity.
+NOT RUN: image builds, GitHub Actions jobs, application lint/typecheck/tests,
+dependency audits or secret scanner execution. Dependencies/apps are absent.
+No package installs, generated observations, new commits, pushes or deployment.
+
+Next phase: initialize actual FastAPI/React apps and implement TT-01 onwards only
+when explicitly requested. No Phase 02 work was started.
+
+Implementation references:
+https://docs.docker.com/reference/compose-file/merge/
+https://docs.github.com/en/actions/tutorials/build-and-test-code/nodejs
