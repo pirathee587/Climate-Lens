@@ -24,11 +24,13 @@
 | POST | `/api/v1/analyses` | One region's time series and statistics | Yes |
 | POST | `/api/v1/comparisons` | Two regions; independent analyses | Yes |
 | GET | `/api/v1/analyses/{id}/export.csv` | CSV of completed series | Yes (if result storage enabled) |
-| GET | `/api/v1/analyses/{id}` | Retrieve stored analysis | Optional if result cache implemented |
+| GET | `/api/v1/analyses/{id}` | Retrieve completed cached analysis | Yes |
+| GET | `/api/v1/analyses/{id}/annual.csv` | Annual series CSV | Yes |
+| GET | `/api/v1/analyses/{id}/metadata.json` | Reproducibility metadata download | Yes |
 | POST | `/api/v1/regions/analyze-bbox` | Custom region processing | P1 |
 | POST | `/api/v1/data/refresh` | Earthdata cloud live refresh | P1 |
 
-A sessionless alternative to result IDs is `POST /api/v1/exports/csv` with the immutable analysis JSON and source checksum; choose **one** export contract early and update SRS/UX consistently. The primary specification assumes short-lived result ID storage is implemented.
+Phase 04 selects the primary GET export contract with a bounded process-local result cache. `POST /api/v1/exports/csv` is not implemented.
 
 ## 3. Catalog: GET /api/v1/variables
 
@@ -181,6 +183,7 @@ A sessionless alternative to result IDs is `POST /api/v1/exports/csv` with the i
 ```json
 {
   "shared_requested_period": {"start_year": 2001, "end_year": 2024},
+  "shared_analyzed_years": [],
   "dataset_compatibility": {"same_product": true, "same_version": true, "same_run": true},
   "left": {"analysis_id": "...", "region": {}, "monthly": [], "annual": [], "statistics": {}, "source": {}},
   "right": {"analysis_id": "...", "region": {}, "monthly": [], "annual": [], "statistics": {}, "source": {}},
@@ -188,16 +191,27 @@ A sessionless alternative to result IDs is `POST /api/v1/exports/csv` with the i
 }
 ```
 
+`shared_analyzed_years` is a required array of unique integer calendar years in ascending order. It identifies the complete, valid years actually shared by the left and right analyses, derived from verified data after quality and completeness checks. It must not be populated by simply expanding the requested start/end range. The empty array above illustrates the response shape only; a successful comparison requires at least 10 shared complete years.
+
+Phase 04 computes independent regional statistics using each region's complete years within the unchanged requested interval. It returns their exact intersection; it does not recompute estimates on only that intersection. If samples differ, warnings explicitly identify both year sets and state that estimates are not matched-sample comparisons. Each side retains all annual summaries, excluded-year warnings and its actual sample count. The tests do not establish a significant difference between slopes.
+
+Strict two-region catalog validation remains the first gate. Missing/unreviewed/corrupt or inconsistent artifacts return 503 DATASET_UNAVAILABLE. A defensive check after trusted result construction returns 409 INCOMPATIBLE_DATA for proven source incompatibility; ordinary version/run/processing mismatches fail the earlier catalog gate with 503. This gate is not weakened to make 409 reachable.
+
+Frontend coordination: Kavishanth's comparisonTypes.ts mirror lacks shared_analyzed_years and comparisonValidation.ts derives display years locally. The frontend owner should consume the backend field; existing fields are preserved and frontend files are unchanged.
+
 Server must align or explicitly list differences in complete calendar years. For a like-for-like graphical comparison prefer only shared complete years; include the exact shared analyzed years. If the common interval has fewer than 10 valid years, return `INSUFFICIENT_DATA` rather than silently changing the period.
 
 ## 7. Export: GET /api/v1/analyses/{id}/export.csv
 
 - `200 OK` with `Content-Type: text/csv; charset=utf-8` and safe file name.
 - Monthly columns: `region_id,period,precipitation_total_mm,valid_fraction,snapshot_id`.
-- Annual output may be a separate `annual.csv` endpoint or a `level` column; choose consistently and document.
-- Metadata JSON is accessible via analysis result; include source/version/run/hash and scientific method in export README or metadata download.
+- Annual endpoint: `GET /api/v1/analyses/{id}/annual.csv`, columns `region_id,year,precipitation_total_mm,valid_months,snapshot_id`.
+- `GET /api/v1/analyses/{id}` returns the original complete analysis JSON unchanged.
+- Additive metadata endpoint: `GET /api/v1/analyses/{id}/metadata.json`, JSON attachment with analysis_id, request, region, source, normalized_units (monthly/annual mm; slope mm/year), statistics, algorithm_version, warnings and scientific_limitations. Source includes collection/version/Final run, original variable/unit, snapshot ID/hash, retrieval timestamp, public URI and processing method.
 - `404 NOT_FOUND` if the server no longer retains the requested analysis result.
-- CSV cell formula injection mitigation: only numeric/date/known predefined region IDs from validated sources, no uncontrolled CSV labels.
+- CSV is UTF-8 with deterministic headers and chronological rows. Null numeric values are empty fields; annual valid-month counts and null totals match the analysis exactly.
+- Potentially unsafe text cells beginning with =, +, -, @ (including whitespace/BOM prefixes), tab, CR or LF are prefixed with an apostrophe. Standard csv quoting handles commas, quotes, line breaks and Unicode. For such identifiers, JSON retains the original text; CSV contains the safe spreadsheet representation.
+- Download filenames use only the server UUID and fixed suffixes. Content-Disposition is exposed through allowed-origin CORS. No source fetch or recalculation occurs during retrieval/export.
 
 ## 8. Health: GET /health
 
@@ -242,15 +256,29 @@ FastAPI's default validation error schema may be transformed at a central except
 - Auth is not required for the non-personal P0 demo; protect any P1 import/admin routes.
 
 
-## Phase 03 implementation and availability
+## Phase 04 implementation and availability
 
 `POST /api/v1/analyses` is implemented using the existing request/response schemas.
 Default production catalogs remain 503 until both independently reviewed NASA
 snapshots are configured. Analysis additionally requires snapshot-bound reviewed
 quality policies.
-A successful response uses a new UUID but is not persisted; GET result retrieval,
-comparison and CSV export remain unimplemented. Monthly values are normalized
-source records; annual summaries and statistics come from Gaja's engine.
+Successful POST analyses are cached under their existing UUID. Successful comparisons
+publish both side UUIDs atomically only after full validation. Retrieval, monthly/
+annual CSV and metadata download use this cache without any source or science calls.
+Monthly values are normalized source records; annual summaries and statistics come
+from Gaja's unchanged engine.
+
+The cache is per application/process: monotonic TTL defaults to 1200 seconds,
+RESULT_CACHE_TTL_SECONDS range 1..86400; capacity defaults to 100,
+RESULT_CACHE_MAX_ENTRIES range 2..1000 (minimum two for atomic comparison pairs).
+Fixed additional limits: 2 MiB serialized JSON per entry and 32 MiB total retained
+JSON. Entries expire on access/insertion and oldest insertion is evicted first
+when count/byte capacity is reached. Reads do not refresh TTL or eviction order.
+Nested results are validated, serialized and deserialized to prevent caller mutation;
+access is synchronized. Oversized/invalid results fail safely rather than being
+partially cached. Expired, evicted, unknown or previous-process IDs return 404.
+There is no database, multi-worker synchronization or persistence. Use one worker
+for P0; a restart or another replica cannot recover IDs.
 
 Additional public error: HTTP 503 `STATISTICS_ENGINE_UNAVAILABLE` means the
 scientific engine cannot be imported/loaded, distinct from `DATASET_UNAVAILABLE`.

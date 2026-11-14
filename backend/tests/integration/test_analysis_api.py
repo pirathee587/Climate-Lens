@@ -53,15 +53,15 @@ def test_ten_year_analysis_actual_factory_and_uuid(case):
         }
         assert "snapshot_path" not in response.text
         assert client.get("/api/v1/variables").status_code == 200
-        assert client.post("/api/v1/comparisons", json={}).status_code == 404
+        assert client.post("/api/v1/comparisons", json={}).status_code == 422
         assert (
-            client.get("/api/v1/analyses/" + result["analysis_id"]).status_code == 404
+            client.get("/api/v1/analyses/" + result["analysis_id"]).status_code == 200
         )
         assert (
             client.get(
                 "/api/v1/analyses/" + result["analysis_id"] + "/export.csv"
             ).status_code
-            == 404
+            == 200
         )
 
 

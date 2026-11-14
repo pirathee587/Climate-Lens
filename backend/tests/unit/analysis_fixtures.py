@@ -31,20 +31,24 @@ def make_case(
     nulls=(),
     original_units="mm",
     fractions=True,
+    region_options=None,
 ) -> SyntheticAnalysisCase:
     approvals, policies = [], []
     for region in ("jaffna_area", "colombo_area"):
+        options = (region_options or {}).get(region, {})
+        region_missing = options.get("missing", missing)
+        region_slope = options.get("slope", slope)
         recipe = synthetic_recipe(region, original_units=original_units)
         raw = ["period,rate,fraction,quality"]
         for year in range(start, end + 1):
             for month in range(1, 13):
                 period = f"{year}-{month:02d}"
-                if period in missing:
+                if period in region_missing:
                     continue
                 value = (
                     1
                     if original_units == "mm/hr"
-                    else (500 + slope * (year - start)) / 12
+                    else (500 + region_slope * (year - start)) / 12
                 )
                 raw_value = "" if period in nulls else str(value)
                 quality = (
