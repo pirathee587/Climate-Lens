@@ -1,8 +1,10 @@
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
 
 from app.schemas.common import ErrorResponse
 from app.schemas.source import RegionsResponse
-from app.services.catalog import require_verified_catalog
+from app.services.catalog import CatalogService, get_catalog_service
 
 router = APIRouter()
 
@@ -12,6 +14,7 @@ router = APIRouter()
     response_model=RegionsResponse,
     responses={503: {"model": ErrorResponse}},
 )
-def get_regions() -> RegionsResponse:
-    require_verified_catalog()
-    raise AssertionError("Phase 02 must supply a verified catalog implementation")
+def get_regions(
+    catalog: Annotated[CatalogService, Depends(get_catalog_service)],
+) -> RegionsResponse:
+    return catalog.regions()
