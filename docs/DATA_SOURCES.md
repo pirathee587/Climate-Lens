@@ -4,19 +4,26 @@
 
 ## 1. Official primary source
 
-| Property | Planned selection |
+**TT-02 verification status:** The selected source and one authenticated V07B Final
+monthly granule have now been inspected with `h5py`. Detailed evidence is recorded
+in [TT-02_SOURCE_VERIFICATION.md](TT-02_SOURCE_VERIFICATION.md). The regional
+bounding boxes remain proposed study areas pending team approval; they are not
+administrative boundaries.
+
+| Property | Verified selection |
 |---|---|
 | Mission/algorithm | NASA / JAXA GPM, IMERG multisatellite precipitation estimate |
 | Collection | **GPM_3IMERGM_07** (Monthly Final, Version 07 product collection) |
-| Data version label | **V07B**, confirm in actual granule |
-| Data variable | Monthly precipitation field; **inspect file to confirm name and units** |
-| Typical grid | **0.1° × 0.1°** latitude/longitude |
-| Source historical coverage | V07 IMERG record begins in 1998; actual snapshot coverage checked separately |
-| P0 analysis period | **2001–2024** proposed complete calendar years (subject to verified data) |
-| P0 regions | Exact bounding boxes near **Jaffna** and **Colombo**, kept in verified manifest |
+| Data version label | **V07B**, verified in the inspected granule |
+| Data variable | `Grid/precipitation`, verified in the inspected HDF5 file |
+| Original units | `mm/hr`, verified from the dataset `units` attribute |
+| Typical grid | **0.1° × 0.1°** latitude/longitude cell centers, verified in the file |
+| Source historical coverage | **1998-01 through 2025-09**, verified through NASA CMR |
+| P0 analysis period | **2001–2024** lies within source coverage; monthly completeness remains to be checked |
+| P0 regions | Proposed boxes documented in the TT-02 verification report; team approval pending |
 | Preferred runtime mode | **Verified offline snapshot**, no live NASA dependency |
 
-**Official references:** [NASA IMERG](https://gpm.nasa.gov/data/imerg), [GPM Data Directory](https://gpm.nasa.gov/data/directory), [NASA Giovanni](https://giovanni.gsfc.nasa.gov/), [NASA Earthdata Search](https://search.earthdata.nasa.gov/).
+**Official references:** [NASA IMERG](https://gpm.nasa.gov/data/imerg), [NASA Earthdata collection](https://www.earthdata.nasa.gov/data/catalog/ges-disc-gpm-3imergm-07), [NASA CMR collection](https://cmr.earthdata.nasa.gov/search/concepts/C2723754851-GES_DISC), [GPM Data Directory](https://gpm.nasa.gov/data/directory), [NASA Giovanni](https://giovanni.gsfc.nasa.gov/), [NASA Earthdata Search](https://search.earthdata.nasa.gov/).
 
 ## 2. 2026 data-access cautions
 
