@@ -1,8 +1,10 @@
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
 
 from app.schemas.common import ErrorResponse
 from app.schemas.source import VariablesResponse
-from app.services.catalog import require_verified_catalog
+from app.services.catalog import CatalogService, get_catalog_service
 
 router = APIRouter()
 
@@ -10,6 +12,7 @@ router = APIRouter()
 @router.get(
     "", response_model=VariablesResponse, responses={503: {"model": ErrorResponse}}
 )
-def get_variables() -> VariablesResponse:
-    require_verified_catalog()
-    raise AssertionError("Phase 02 must supply a verified catalog implementation")
+def get_variables(
+    catalog: Annotated[CatalogService, Depends(get_catalog_service)],
+) -> VariablesResponse:
+    return catalog.variables()
