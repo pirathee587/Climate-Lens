@@ -1,10 +1,42 @@
-# TerraTrend backend — Pirathee Phases 01–02 / TT-01, TT-05 Part 1
+# TerraTrend backend — Pirathee Phase 03
 
-A runnable FastAPI foundation with typed v1 contracts and a repository integration boundary. Requirements addressed:
-FR-019 (health/errors), NFR-006 (schema validation), NFR-007 (CORS/secrets),
-NFR-008 (request tracing) and NFR-015 (local setup). Catalog readiness portions
-of FR-001/002 remain pending Harith's verified inputs and Phase 02 integration.
-No database, scientific calculations, data import, result cache or frontend code.
+FastAPI integrates Harith's read-only verified repository and Gaja's statistical
+engine. **CONTRACT-READY BUT BLOCKED:** independently reviewed real NASA snapshots
+and quality policies are still missing. Default catalogs and analysis return 503.
+Health remains 200. No database, result cache, comparison or export is implemented.
+
+## Phase 03 configuration and analysis
+
+`POST /api/v1/analyses` implements the existing AnalysisRequest/AnalysisResponse
+contract. Valid requests require both verified regions, matching source metadata,
+coverage within the manifest, a reviewed quality policy and ten complete years.
+The service delegates aggregation and trends to Gaja; it never converts units again.
+Incomplete annual totals stay null; actual analyzed years and scientific warnings
+are preserved. UUIDs identify responses only; retrieval is not implemented.
+
+Two process environment settings are JSON arrays, empty by default:
+
+- `SNAPSHOT_APPROVALS`: ArtifactApproval objects with `descriptor_path` and
+  independently reviewed `descriptor_sha256`; maximum two, no directory discovery.
+- `SNAPSHOT_QUALITY_POLICIES`: ReviewedQualityPolicy objects with `snapshot_sha256`,
+  nonempty unique `accepted_quality_flags`, nullable `minimum_valid_fraction`, and
+  `review` (status reviewed, reviewed_by, reviewed_at, evidence_reference).
+
+Quality policies bind the exact normalized snapshot hash. Review must not predate
+source retrieval; evidence must be a public HTTPS reference without credentials,
+query or fragment. Scientific/data owners must approve the actual flag semantics
+and any fraction threshold; the backend invents neither. Attestations are operator
+configuration, not cryptographic proof of NASA authenticity. Files must remain
+immutable while serving. Never use test approvals or synthetic fixtures in production.
+`SNAPSHOT_ROOT` contains the explicitly approved artifacts; a nonempty approval
+list activates HarithSnapshotRepository. Invalid/incomplete artifacts fail closed.
+
+Missing or corrupt data/policy returns 503 DATASET_UNAVAILABLE; unavailable engine
+returns 503 STATISTICS_ENGINE_UNAVAILABLE. Invalid scientific input is 422
+INVALID_ARGUMENT, insufficient complete years is 422 INSUFFICIENT_DATA, and numerical
+or invalid response failures are sanitized 500 ANALYSIS_ERROR.
+
+[Phase 03 delivery and validation report](PHASE03_REPORT.md).
 
 ## Local setup (Python 3.12)
 
@@ -51,7 +83,7 @@ it does not implicitly load `.env`. Set variables before starting Uvicorn.
 | `APP_ENV` | `development` | `development`, `test` or `production`; production disables docs/OpenAPI |
 | `APP_PORT` | `8000` | Validated port; local Uvicorn command above passes it explicitly |
 | `ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated exact HTTP(S) origins; empty denies all browser origins |
-| `SNAPSHOT_ROOT` | repository `data/demo` | Future verified repository root; no data is read in Phase 01 |
+| `SNAPSHOT_ROOT` | repository `data/demo` | Explicitly approved immutable repository root |
 | `LOG_LEVEL` | `INFO` | DEBUG, INFO, WARNING, ERROR or CRITICAL |
 
 The example `SNAPSHOT_ROOT=../data/demo` is relative to a local backend working
@@ -66,8 +98,9 @@ non-browser clients can still call public endpoints.
 | Method/path | Status/behavior |
 |---|---|
 | `GET /health` | 200, exact liveness response below, independent of dataset readiness |
-| `GET /api/v1/variables` | 503 `DATASET_UNAVAILABLE` |
-| `GET /api/v1/regions/presets` | 503 `DATASET_UNAVAILABLE` |
+| `GET /api/v1/variables` | 503 by default; 200 with verified two-region repository |
+| `GET /api/v1/regions/presets` | 503 by default; 200 with verified two-region repository |
+| `POST /api/v1/analyses` | 503 by default; 200 with approved sources/policies and sufficient years |
 | `GET /docs`, `GET /openapi.json` | 200 in development/test; 404 in production |
 
 ```json
@@ -79,18 +112,9 @@ Malformed JSON is 400; schema validation 422; unknown routes 404; wrong methods
 405; unexpected errors 500 with no traceback. Every HTTP response has X-Request-ID.
 CORS-denied preflight also returns the structured error contract.
 
-The default repository remains unavailable even if files are copied into the
-snapshot directory. The Phase 02 integration contract is implemented, but Harith's
-actual adapter and verified artifacts are absent; file presence alone never
-constitutes verification. No bounding boxes, coverage dates,
-NASA metadata, observations or statistics are invented.
-
-Future `AnalysisRequest`, `ComparisonRequest`, source, series, statistics and UUID
-result models are defined in `app/schemas/`. Only implemented routes appear in
-OpenAPI. Models validate finite numbers, strict integer years, ordered ranges,
-alpha, source mode, WGS84 bounds, checksum shape and chronological series. Pure
-schemas do not verify provenance or impose dataset coverage/ten-complete-year
-business rules; later integration must enforce those against verified data.
+See the Phase 03 configuration above for explicit repository activation. Schemas
+validate finite numbers, strict years and ordered series; the orchestration layer
+also validates provenance, coverage and complete-year eligibility.
 
 ## Docker and CI
 
@@ -114,82 +138,18 @@ invocation. It uses read-only repository permissions and SHA-pinned actions; run
 lint, format, tests, pip check and vulnerability audit; builds an image without
 publishing; and checks non-root container health. There is no readiness bypass now
 that the backend exists. The existing separate secret-scanning workflow remains.
-Remote GitHub Actions runs require a later explicitly authorized commit/push.
+Phase 03 delivery includes an explicitly authorized backend-only CI dispatch.
 
-## Phase boundaries
+## Ownership and historical reports
 
-Harith owns `app/data/` and real snapshots/manifests. Gaja owns `app/statistics/`.
-Their directories are unchanged. There are no analysis, comparison, export or
-retrieval routes yet. Future result IDs use a process-local short-lived cache:
-restart loses IDs (404), and multi-replica caching is outside P0. That cache is not
-implemented in this phase. The current team decision is no database in P0,
-overriding optional storage alternatives in the original baseline documentation.
+Harith owns `app/data/`; Gaja owns `app/statistics/`. Both modules are integrated
+without modifying their implementations. Phase 04 will implement comparison, a
+short-lived result cache and the agreed GET CSV export contract. Frontend fitted
+OLS points remain a separate additive contract change; existing schemas are reused.
 
-[Phase 01 verification report](PHASE01_REPORT.md) records actual results and limits.
+Earlier reports describe their original phase state:
 
-
-## Phase 02 — repository integration and catalog readiness
-
-**Status: CONTRACT-READY BUT BLOCKED.** Harith's data directory and snapshot/manifest
-directories still contain only placeholders. No real NASA data adapter is integrated.
-The production defaults therefore remain 503 for both catalogs, while health is 200.
-No Phase 03 work, database, NASA fetching, CSV parsing or ingestion was introduced.
-
-`app/services/snapshot_repository.py` defines the trusted read-only adapter port:
-
-- `list_verified_datasets()` returns normalized `SnapshotDescriptor` objects.
-- `list_verified_regions(variable_id)` returns checked `RegionDescriptor` objects.
-- `get_verified_monthly_series(variable_id, region_id)` returns already-normalized
-  `NormalizedMonthlyRecord` objects, including quality flags and coverage fractions.
-
-Harith's future adapter is responsible for reading its own manifest/CSV format,
-normalizing values, independently reviewing source authenticity, and binding parsed
-records/metadata to the exact hashed artifacts. `app/schemas/repository.py` describes
-an integration DTO, not a new raw manifest file format. There is no competing loader.
-Snapshot/manifest paths are repository-relative adapter references, never API inputs.
-The adapter must supply a reviewed manifest fingerprint and human provenance review
-attestation with reviewer, review time and evidence reference. A checksum match is
-artifact integrity relative to that supplied fingerprint, not proof of NASA origin.
-The boundary cannot independently establish scientific authenticity or verify that
-an adapter correctly parsed its CSV; the trusted reviewed adapter must do that.
-
-Dependency wiring is explicit: the API depends on `get_catalog_service`, which
-receives `get_snapshot_repository` and the application's existing `SNAPSHOT_ROOT`.
-`get_snapshot_repository` returns `UnavailableSnapshotRepository` until a reviewed
-Harith adapter is explicitly wired. Tests override this dependency with a clearly
-labeled synthetic adapter rooted in pytest `tmp_path`; it is never enabled in
-production. No automatic import, file discovery or request-time network fetch exists.
-
-Catalog service validates both required regions together, including all artifacts,
-metadata consistency, matching collection/version/Final run, units, processing and
-coverage. The current baseline accepts IMERG collection GPM_3IMERGM_07 with a V07
-version label supplied by the adapter; no example version, date or geometry is filled
-in. Additional product versions require an explicit science/contract review.
-Original units supported by this DTO are mm/hr, mm or mm/month; normalized totals
-remain mm/month, and public catalog aggregation units remain mm. No rate conversion
-or temporal aggregation happens here. Region display labels and actual bounds come
-entirely from the adapter, and null/invalid bounds cannot become selectable presets.
-Partial one-region catalogs and silently mixed variants are rejected.
-
-`app/services/snapshot_validation.py` checks read-only artifact existence, hashes,
-root confinement, traversal/absolute/Windows paths and symlink references. All
-artifact symlinks are rejected, including links inside the root. The trusted local
-repository must remain immutable while requests are served; this is not a sandbox
-for concurrently hostile filesystem writers. No private paths or provider exception
-messages are returned or logged. Missing files, validation failures and provider
-exceptions become the existing structured 503 DATASET_UNAVAILABLE with request ID.
-
-`validate_series` returns `ValidatedMonthlySeries`: ordered unique observations,
-quality/coverage metadata, descriptor and explicit `missing_periods`. Interior gaps
-are recorded without inventing rows. Null rainfall/coverage stays null; NaN/Infinity
-and out-of-coverage/duplicate/unordered records are rejected. Catalogs report the
-validated first/last span, not a guarantee of complete data within that span. The
-later analysis layer must inspect missing months and enforce ten complete years.
-
-Both catalog endpoints return the existing API schemas if the complete injected
-repository passes validation. The production response remains unavailable until the
-real adapter exists. No external catalog payload or OpenAPI contract was changed.
-The backend CI workflow is unchanged: main pushes and relevant PRs run it; feature
-pushes do not. It also permits manual backend-only workflow dispatch.
-
-[Phase 02 verification and GitHub delivery report](PHASE02_REPORT.md).
+- [Phase 01](PHASE01_REPORT.md)
+- [Phase 02](PHASE02_REPORT.md)
+- [Harith data module](DATA_MODULE_REPORT.md)
+- [Gaja statistical engine](STATISTICS_MODULE_REPORT.md)

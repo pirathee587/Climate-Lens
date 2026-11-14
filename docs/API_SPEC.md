@@ -240,3 +240,23 @@ FastAPI's default validation error schema may be transformed at a central except
 - Include `source_mode`, `algorithm_version`, `snapshot_id` and provenance for reproducibility.
 - Endpoint integration tests must compare generated responses to checked scientific references.
 - Auth is not required for the non-personal P0 demo; protect any P1 import/admin routes.
+
+
+## Phase 03 implementation and availability
+
+`POST /api/v1/analyses` is implemented using the existing request/response schemas.
+Default production catalogs remain 503 until both independently reviewed NASA
+snapshots are configured. Analysis additionally requires snapshot-bound reviewed
+quality policies.
+A successful response uses a new UUID but is not persisted; GET result retrieval,
+comparison and CSV export remain unimplemented. Monthly values are normalized
+source records; annual summaries and statistics come from Gaja's engine.
+
+Additional public error: HTTP 503 `STATISTICS_ENGINE_UNAVAILABLE` means the
+scientific engine cannot be imported/loaded, distinct from `DATASET_UNAVAILABLE`.
+Its structured error envelope and X-Request-ID follow the existing contract.
+Numerical failures return sanitized HTTP 500 `ANALYSIS_ERROR`; insufficient
+complete years return HTTP 422 `INSUFFICIENT_DATA`.
+
+No fitted OLS line field is added in Phase 03; that additive frontend contract
+requires a coordinated schema, client and traceability update.
