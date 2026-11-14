@@ -103,6 +103,14 @@ class OLSResult:
     intercept_mm: float
     r_squared: float | None
 
+    def fitted_mm(self, year: int) -> float:
+        """Evaluate the fitted OLS annual total (mm) at a calendar year."""
+        checked = checked_year(year)
+        value = self.intercept_mm + self.slope_mm_per_year * checked
+        if not math.isfinite(value):
+            raise NumericalAnalysisError("OLS fitted value is nonfinite.")
+        return float(value)
+
 
 @dataclass(frozen=True)
 class SenResult:
@@ -161,6 +169,22 @@ class TrendResult:
     @property
     def mann_kendall_p_value(self) -> float:
         return self.mann_kendall.p_value
+
+    def ols_fitted_mm(self, year: int) -> float:
+        """Evaluate the fitted OLS line (mm) for an analyzed complete year."""
+        checked = checked_year(year)
+        if checked not in self.analyzed_years:
+            raise InvalidDataError(
+                "OLS fitted values are defined only for analyzed complete years."
+            )
+        value = self.ols_intercept_mm + self.ols_slope_mm_per_year * checked
+        if not math.isfinite(value):
+            raise NumericalAnalysisError("OLS fitted value is nonfinite.")
+        return float(value)
+
+    def ols_fitted_series(self) -> dict[int, float]:
+        """Map each analyzed complete calendar year to its OLS fitted total (mm)."""
+        return {year: self.ols_fitted_mm(year) for year in self.analyzed_years}
 
     def statistics_payload(self) -> dict:
         """JSON-compatible mapping to the unchanged v1 Statistics schema."""
