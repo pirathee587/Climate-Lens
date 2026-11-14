@@ -2,11 +2,12 @@
 
 ## 1. Status
 
-**INCOMPLETE — hosted validation pending.** Infrastructure implementation and all
-available source checks are complete; full frontend integration is blocked. The
-required hardened profile cannot start on this local Snap Docker because its
-no-new-privileges flag prevents execution. Exact committed-profile hosted CI must
-pass before infrastructure delivery is reported ready. No real NASA demo is claimed.
+**INFRASTRUCTURE-READY BUT INTEGRATION BLOCKED.** Exact hardened backend production,
+offline smoke and both Compose variants passed hosted CI on the implementation SHA.
+Frontend/full-stack jobs were explicitly skipped because the real scaffold is absent.
+This is not full-system or real NASA demonstration readiness. Local Snap Docker still
+cannot execute no-new-privileges containers; diagnostic runs omitting that flag are
+reported separately and are not hardened local successes.
 
 ## 2. Base and branch
 
@@ -137,10 +138,27 @@ vulnerabilities. No dependency changes. git diff --check passed.
 
 ## 10. Hosted verification
 
-Pending Phase 05 implementation push and manual dispatch of existing relevant workflows.
-No previous Phase 04 run is Phase 05 evidence. Actual implementation SHA, run URLs,
-job results and frontend skipped status will be recorded after completion. A later
-documentation-only commit will identify the tested implementation separately.
+All runs used implementation **73f16d94700e2e6362eeab7b1710520bf3588ed1**:
+
+| Workflow | Run | Actual result |
+|---|---|---|
+| Backend CI | https://github.com/pirathee587/Climate-Lens/actions/runs/43587759307 | SUCCESS: 385 tests, 7 checker tests, lint/format/audit, production build, non-root offline hardened smoke |
+| Docker build | https://github.com/pirathee587/Climate-Lens/actions/runs/43587762514 | SUCCESS: Compose invariants, production and development backend builds/runtime smoke; full-stack job SKIPPED |
+| Frontend CI | https://github.com/pirathee587/Climate-Lens/actions/runs/43587765842 | Readiness SUCCESS; frontend job SKIPPED / NOT TESTED |
+| Secret scanning | https://github.com/pirathee587/Climate-Lens/actions/runs/43587769070 | SUCCESS: full implementation history and working tree, no leaks |
+
+Actual workflow tested SHAs, job/step conclusions and logs inspected. Backend logs:
+385 passed, 1 warning in 9.99 seconds; 7 infrastructure tests in 3.553 seconds; no known
+vulnerabilities. Offline container ran with network none, read-only root, dropped
+capabilities and no-new-privileges. Docker matrix logs confirm both mode health 200,
+read-only snapshot checks, container-local/host HTTP/CORS and cleanup passed with
+all committed restrictions. This resolves exact-profile infrastructure validation
+on a compatible runtime; it does not fix local Snap Docker. Frontend/full-stack jobs
+are not passing application checks: they have no test/build execution.
+All existing workflows were dispatchable by branch ref; no new default-branch
+workflow registration or main merge was needed. No deployment/image publishing.
+A subsequent documentation-only commit records this evidence; CI tests the
+implementation SHA above, not that later report commit.
 
 ## 11. Security verification
 
@@ -200,15 +218,18 @@ absent. No real scientific offline demo or release readiness is claimed.
 
 ## 15. GitHub delivery
 
-Required message: ci(devops): configure TerraTrend Docker Compose and integration workflows.
-Only listed infrastructure/test/documentation files will be staged by exact path.
-No git add . / git add -A. Implementation SHA, verified remote SHA, push result and
-actual hosted evidence will be recorded after delivery. No PR/main merge/deployment.
+Commit message: ci(devops): configure TerraTrend Docker Compose and integration workflows.
+Implementation SHA: 73f16d94700e2e6362eeab7b1710520bf3588ed1.
+Automatic push succeeded with upstream tracking; git ls-remote matched the exact
+implementation SHA. All 21 authorized paths staged individually; no git add . / -A.
+A later documentation-only commit updates this report, README and deployment guide.
+Its final verified remote SHA is available from branch HEAD/final delivery response;
+application, scripts, Compose and workflow content remain the hosted-tested versions.
+Original main checkout remains clean and unchanged. No PR/main merge/deployment.
 
 ## 16. Phase 06 prerequisites
 
-Infrastructure foundation supports later integration; require exact-profile CI pass,
-reviewed frontend scaffold and contract alignment, compatible local Docker runtime,
+Exact-profile infrastructure CI has passed. Remaining prerequisites: reviewed frontend scaffold and contract alignment, compatible local Docker runtime,
 real reviewed immutable source bundles/policies, browser E2E, verified-data offline
 scientific demo, performance/accessibility/QA and release review. None of those
 remaining release gates is replaced by liveness, mock data or readiness skips.

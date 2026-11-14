@@ -6,7 +6,8 @@ OLS/Sen/Mann–Kendall analysis, comparison and CSV/provenance exports. React/Vi
 charts and maps belong to their frontend owners. Trend evidence does not prove a cause
 or a significant difference between regional slopes.
 
-**Phase 05: infrastructure ready for validation; full frontend integration is blocked.**
+**Phase 05: INFRASTRUCTURE-READY BUT INTEGRATION BLOCKED.**
+Hosted hardened backend/Compose checks pass; frontend application checks are skipped.
 This branch has the working Phase 01–04 backend and Phase 05 container/CI preparation.
 The real frontend scaffold is still on `feat/tt-06-frontend-scaffold`; main contains
 map/comparison components but no package.json, lockfile or Vite entry point. It has

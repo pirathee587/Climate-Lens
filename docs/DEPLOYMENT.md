@@ -187,7 +187,9 @@ an exact no-new-privileges offline container smoke. Docker CI validates both Com
 variants and runs production/development backend Compose smoke. When real scaffold
 exists it additionally builds/smokes both full-stack variants. Frontend CI requires
 npm ci, lint, typecheck, non-watch tests, production build and high-severity audit.
-Absent frontend jobs are explicitly **skipped / NOT TESTED**, even if readiness jobs
+Exact hardened backend/offline and production/development Compose checks passed
+[Phase 05 hosted validation](../backend/PHASE05_REPORT.md). The local Snap limitation
+remains a host prerequisite. Absent frontend jobs are explicitly **skipped / NOT TESTED**, even if readiness jobs
 and the overall workflow conclude success. Security workflow scans history and tree.
 Actions use pinned SHAs and read-only repository permissions; images are not published.
 
