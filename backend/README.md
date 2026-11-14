@@ -57,7 +57,7 @@ Successful analyses and both sides of a fully successful comparison are retrieva
 - GET /api/v1/analyses/{id}/annual.csv: annual CSV.
 - GET /api/v1/analyses/{id}/metadata.json: provenance/units/method/limitations JSON.
 
-Unknown/expired/evicted IDs return404 NOT_FOUND; malformed UUIDs return422
+Unknown/expired/evicted IDs return 404 NOT_FOUND; malformed UUIDs return422
 INVALID_ARGUMENT. Retrieval/downloads perform no source or scientific calls.
 CSV null numbers are blank, headers deterministic and dates ordered. Text cells
 that could become spreadsheet formulas are prefixed with an apostrophe; JSON keeps
@@ -204,3 +204,19 @@ Earlier reports describe their original phase state:
 - [Phase 02](PHASE02_REPORT.md)
 - [Harith data module](DATA_MODULE_REPORT.md)
 - [Gaja statistical engine](STATISTICS_MODULE_REPORT.md)
+
+## Phase 05 container and CI integration
+
+[Deployment preparation](../docs/DEPLOYMENT.md) documents the actual Compose variants,
+frontend dependency, environment settings, browser API URLs and host runtime limits.
+The backend production Docker command explicitly uses one worker for the process-local
+cache. Compose mounts snapshots read-only, drops capabilities, enables
+no-new-privileges and uses a read-only root filesystem with bounded /tmp. Development
+adds a read-only app source mount and reload; production docs remain disabled.
+backend/.env.example now lists empty review configuration and cache defaults.
+
+From the repository root, `bash scripts/smoke-stack.sh production backend` and its
+development variant verify only the available backend. Full mode refuses absent
+frontend source instead of claiming a passing stack. The local Snap runtime's
+no-new-privileges incompatibility and exact hosted results are recorded in
+[Phase 05 report](PHASE05_REPORT.md). No application/data/statistical logic changes.

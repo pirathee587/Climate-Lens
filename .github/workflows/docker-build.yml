@@ -12,37 +12,57 @@ concurrency:
 jobs:
   compose:
     runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.source.outputs.available }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - run: docker compose config --quiet
       - run: docker compose -f compose.yaml -f compose.dev.yaml config --quiet
-  images:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: [frontend, backend]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Detect build readiness
-        id: ready
+      - run: bash -n scripts/smoke-stack.sh
+      - run: python3 scripts/check_compose.py
+      - name: Report frontend build and full-stack availability
+        id: source
         shell: bash
-        env:
-          SERVICE: ${{ matrix.service }}
         run: |
-          if [[ "$SERVICE" == frontend && -f frontend/package.json ]]; then
+          if [[ -f frontend/package.json || -f frontend/package-lock.json || -f frontend/index.html ]]; then
+            test -f frontend/package.json
             test -f frontend/package-lock.json
             test -f frontend/index.html
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          elif [[ "$SERVICE" == backend && -f backend/requirements.txt ]]; then
-            test -f backend/app/main.py
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo 'available=true' >> "$GITHUB_OUTPUT"
           else
-            echo "Phase 01: $SERVICE image build pending application and dependencies." >> "$GITHUB_STEP_SUMMARY"
+            echo 'available=false' >> "$GITHUB_OUTPUT"
+            echo 'BLOCKED: frontend images/full-stack tests NOT TESTED; real frontend scaffold is absent.' >> "$GITHUB_STEP_SUMMARY"
           fi
-      - name: Build production and development images (no push)
-        if: steps.ready.outputs.enabled == 'true'
+  backend-images:
+    needs: compose
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        mode: [production, development]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Build and smoke backend Compose target without publishing
         env:
-          SERVICE: ${{ matrix.service }}
-        run: |
-          docker build --target production --tag "terratrend-$SERVICE:ci" "$SERVICE"
-          docker build --target development --tag "terratrend-$SERVICE:dev-ci" "$SERVICE"
+          MODE: ${{ matrix.mode }}
+        run: bash scripts/smoke-stack.sh "$MODE" backend
+  full-stack:
+    needs: compose
+    if: needs.compose.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        mode: [production, development]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Build actual frontend/backend targets and smoke HTTP connectivity
+        env:
+          MODE: ${{ matrix.mode }}
+        run: bash scripts/smoke-stack.sh "$MODE" full

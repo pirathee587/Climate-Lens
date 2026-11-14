@@ -2,9 +2,9 @@ name: Backend CI
 on:
   push:
     branches: [main]
-    paths: ['backend/**', '.github/workflows/backend-ci.yml', '.github/workflows/docker-build.yml']
+    paths: ['scripts/**', 'backend/**', '.github/workflows/backend-ci.yml', '.github/workflows/docker-build.yml']
   pull_request:
-    paths: ['backend/**', '.github/workflows/backend-ci.yml', '.github/workflows/docker-build.yml']
+    paths: ['scripts/**', 'backend/**', '.github/workflows/backend-ci.yml', '.github/workflows/docker-build.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -32,28 +32,32 @@ jobs:
       - name: Install pinned development dependencies
         run: python -m pip install -r requirements-dev.txt
       - name: Ruff lint
-        run: python -m ruff check .
+        run: python -m ruff check . ../scripts --config pyproject.toml
       - name: Ruff formatting
-        run: python -m ruff format --check .
+        run: python -m ruff format --check . ../scripts --config pyproject.toml
       - name: Unit and integration tests
         run: python -m pytest -q
+      - name: Infrastructure smoke checker tests
+        run: python -m unittest discover -s ../scripts/tests -v
       - name: Validate dependency compatibility
         run: python -m pip check
       - name: Dependency vulnerability audit
         run: python -m pip_audit -r requirements-dev.lock --no-deps --disable-pip
       - name: Build backend image without publishing
         run: docker build -f Dockerfile -t terratrend-api:ci .
-      - name: Smoke check non-root container and health
+      - name: Smoke check non-root offline production container
+        working-directory: .
         shell: bash
         run: |
           set -euo pipefail
-          container_id=$(docker run --detach terratrend-api:ci)
-          trap 'docker logs "$container_id"; docker rm -f "$container_id"' EXIT
+          container_id=$(docker run --detach --network none --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m --cap-drop ALL --security-opt no-new-privileges:true terratrend-api:ci)
+          trap 'docker rm -f "$container_id" >/dev/null' EXIT
           test "$(docker exec "$container_id" id -u)" = 10001
           for attempt in {1..30}; do
-            if docker exec "$container_id" python -c "import json,urllib.request; r=urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=2); assert json.load(r)=={'status':'ok','service':'terratrend-api','api_version':'v1'}"; then
-              exit 0
-            fi
+            if docker exec "$container_id" python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"; then break; fi
             sleep 1
           done
-          exit 1
+          test -s scripts/smoke_backend.py
+          smoke_code=$(cat scripts/smoke_backend.py)
+          docker exec "$container_id" python -c "$smoke_code" --environment production
+          docker exec "$container_id" python -c "import app.data.repository_adapter, app.statistics"
