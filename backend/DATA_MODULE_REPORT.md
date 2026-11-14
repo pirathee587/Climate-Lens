@@ -253,19 +253,39 @@ Repository: pirathee587/Climate-Lens.
 Branch: feat/tt-03-harith-nasa-snapshots.
 Base: origin/feat/tt-05-pirathee-phase02-nasa-integration at bb3dfb4.
 Truthful message: feat(data): implement IMERG ingestion pipeline and repository adapter.
-Commit SHA will be recorded after implementation commit/push.
+Implementation commit: `a28e4040fbc89fbb8e88ce82e9794eb9174fea26`.
+The later delivery-report commit changes this Markdown file only; tested code is unchanged.
 
 ## 13. GitHub push status
 
-Pending initial implementation commit at report creation. Only the sixteen enumerated
-Harith-owned module/test/script/report files may be staged. No git add . or git add -A,
-force push, PR, merge or deployment is performed.
+**Push SUCCESS** via `git push -u origin feat/tt-03-harith-nasa-snapshots`.
+Remote git ls-remote and the GitHub branch API both confirmed implementation SHA
+`a28e4040fbc89fbb8e88ce82e9794eb9174fea26`.
+Verified [branch URL](https://github.com/pirathee587/Climate-Lens/tree/feat/tt-03-harith-nasa-snapshots).
+Only the sixteen enumerated Harith-owned files were staged, individually by path.
+No git add . / git add -A, force push, PR, merge or deployment was performed.
 
 ## 14. CI run URL and result
 
-Existing backend CI supports main pushes, relevant PRs and manual dispatch; feature
-pushes do not trigger it. Backend-only manual dispatch will be attempted after push.
-Local verification above is distinct from hosted CI; its actual result will be recorded.
+**GitHub-hosted Backend CI: SUCCESS**.
+[Run 43575220291](https://github.com/pirathee587/Climate-Lens/actions/runs/43575220291)
+tested `a28e4040fbc89fbb8e88ce82e9794eb9174fea26`.
+Hosted logs show 219 tests passed, 1 upstream warning in 1.54s; Ruff lint passed,
+50 files formatted, pip check passed, no known vulnerabilities, Docker build passed
+and non-root container health smoke passed. Every backend job step succeeded.
+
+Existing workflow supports main pushes, relevant PRs and manual dispatch; feature
+pushes do not trigger it. Executed the authorized backend-only dispatch and inspected
+its actual jobs/logs with GitHub CLI:
+
+```text
+gh workflow run backend-ci.yml --ref feat/tt-03-harith-nasa-snapshots --repo pirathee587/Climate-Lens
+gh run view 43575220291 --repo pirathee587/Climate-Lens --json conclusion,status,headSha,url,jobs
+gh run view 43575220291 --repo pirathee587/Climate-Lens --log
+```
+
+These are hosted results, distinct from local verification above. No unrelated
+workflow was manually dispatched. No code changes followed this tested commit.
 
 ## 15. Remaining blockers
 
