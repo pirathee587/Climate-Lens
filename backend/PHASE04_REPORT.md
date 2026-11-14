@@ -205,16 +205,26 @@ Docker demonstration and do not imply NASA readiness.
 
 Repository: pirathee587/Climate-Lens. Required commit message:
 feat(backend): implement regional comparison and CSV export.
-Implementation SHA, actual push verification and hosted evidence will be recorded
-in a separate documentation-only commit after delivery. No git add . or git add -A.
+Implementation SHA: 1a225c146f2e502a9134ba9890411256638c56db.
+Push succeeded with upstream tracking set to the new Phase 04 branch. git ls-remote
+confirmed this exact remote implementation SHA. A subsequent documentation-only
+commit records hosted evidence; it does not change tested application code.
+Latest report commit SHA is available from branch HEAD and final delivery response.
+No git add . or git add -A.
 Only the listed backend/test/documentation files are staged individually.
 
 ## 15. Hosted backend CI
 
-Pending authorized implementation push and backend-ci.yml manual dispatch. The
-workflow runs backend lint, formatting, tests, pip check, audit, Docker build and
-non-root container health. Phase 03 CI is not evidence of Phase 04 success.
-The actual tested SHA/run URL/conclusion will be recorded after inspection.
+**SUCCESS** — backend-ci.yml workflow_dispatch, run 43585154230.
+https://github.com/pirathee587/Climate-Lens/actions/runs/43585154230
+Actual tested SHA: 1a225c146f2e502a9134ba9890411256638c56db.
+All hosted steps succeeded: pinned installation, Ruff lint/formatting, 385 tests,
+pip check, vulnerability audit, exact committed Docker image build and non-root
+container health smoke. Actual jobs, step conclusions and logs inspected.
+Completed 2026-11-14T10:25:53Z. No unrelated workflow dispatched.
+The subsequent report commit is documentation only; this run tests the implementation
+SHA above. Final local post-report format check passed (82 files), diff check passed,
+and repeated Gitleaks scan found no leaks (651.65 KB).
 
 ## 16. Remaining real-data blockers
 
