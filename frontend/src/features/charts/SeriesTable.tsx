@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import type { AnnualItem, MonthlyItem } from "../../types/api";
 import { formatNumber, formatPercent } from "../../utils/format";
+import { hasFittedTrend } from "./series";
 
 export interface SeriesTableProps {
   monthly: readonly MonthlyItem[];
@@ -11,6 +12,7 @@ export interface SeriesTableProps {
 /** Text alternative for both charts (NFR-009). Collapsed by default. */
 export function SeriesTable({ monthly, annual }: SeriesTableProps) {
   const [view, setView] = useState<"annual" | "monthly">("annual");
+  const showTrend = hasFittedTrend(annual);
 
   return (
     <details className="rounded-lg border border-slate-200 bg-white p-4">
@@ -46,9 +48,14 @@ export function SeriesTable({ monthly, annual }: SeriesTableProps) {
                 <th scope="col" className="py-1 pr-4">
                   Total (mm)
                 </th>
-                <th scope="col" className="py-1">
+                <th scope="col" className="py-1 pr-4">
                   Valid months
                 </th>
+                {showTrend ? (
+                  <th scope="col" className="py-1">
+                    OLS fitted trend (mm)
+                  </th>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -58,7 +65,10 @@ export function SeriesTable({ monthly, annual }: SeriesTableProps) {
                   <td className="py-1 pr-4">
                     {formatNumber(row.precipitation_total_mm)}
                   </td>
-                  <td className="py-1">{row.valid_months}/12</td>
+                  <td className="py-1 pr-4">{row.valid_months}/12</td>
+                  {showTrend ? (
+                    <td className="py-1">{formatNumber(row.ols_fitted_mm)}</td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>

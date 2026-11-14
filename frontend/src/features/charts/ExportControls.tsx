@@ -48,7 +48,8 @@ export function ExportControls({ analysisId }: ExportControlsProps) {
     setState({ status: "loading" });
     try {
       const blob = await downloadAnalysisCsv(analysisId);
-      saveBlob(blob, `terratrend-analysis-${analysisId}.csv`);
+      // Matches the backend's Content-Disposition filename.
+      saveBlob(blob, `terratrend-${analysisId}.csv`);
       setState({ status: "idle" });
     } catch (error) {
       setState({ status: "error", error });

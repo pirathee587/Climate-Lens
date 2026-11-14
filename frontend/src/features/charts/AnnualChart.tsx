@@ -1,8 +1,9 @@
 import {
   Bar,
-  BarChart,
   CartesianGrid,
-  Cell,
+  ComposedChart,
+  Legend,
+  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -11,26 +12,31 @@ import {
 
 import type { AnnualItem } from "../../types/api";
 import { formatNumber } from "../../utils/format";
-import { isCompleteYear } from "./series";
+import { hasFittedTrend, isCompleteYear } from "./series";
 
 export interface AnnualChartProps {
   annual: readonly AnnualItem[];
   regionName: string;
 }
 
+const OBSERVED_LABEL = "Annual total (mm)";
+const FITTED_LABEL = "OLS fitted trend (mm)";
+
 /**
  * Annual precipitation totals (mm). Only years with 12 valid months carry a
  * total; incomplete years are listed but not plotted as values (FR-008).
  *
- * NOTE: no fitted OLS line is drawn yet. The API returns the OLS slope but
- * not its intercept, and the frontend must not compute regression itself
- * (AGENTS.md: "frontend only displays returned results"). See PR notes.
+ * The OLS fitted trend line is drawn ONLY from `annual[].ols_fitted_mm`
+ * values computed by the backend — the browser never computes regression
+ * (AGENTS.md). Until the API supplies that field the line stays hidden.
  */
 export function AnnualChart({ annual, regionName }: AnnualChartProps) {
   const incomplete = annual.filter((item) => !isCompleteYear(item));
+  const showTrend = hasFittedTrend(annual);
   const data = annual.map((item) => ({
     year: item.year,
     total: isCompleteYear(item) ? item.precipitation_total_mm : null,
+    fitted: typeof item.ols_fitted_mm === "number" ? item.ols_fitted_mm : null,
   }));
 
   return (
@@ -41,10 +47,16 @@ export function AnnualChart({ annual, regionName }: AnnualChartProps) {
           {regionName} · unit: mm per calendar year · only years with 12 valid
           months are totalled
         </p>
+        {showTrend ? (
+          <p className="text-sm text-slate-600" data-testid="trend-line-note">
+            Dashed line: OLS fitted trend calculated by the backend. It
+            describes the past period and is not a forecast.
+          </p>
+        ) : null}
       </figcaption>
       <div className="h-64 w-full" aria-hidden="true">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart
+          <ComposedChart
             data={data}
             margin={{ top: 8, right: 16, bottom: 8, left: 8 }}
           >
@@ -61,21 +73,32 @@ export function AnnualChart({ annual, regionName }: AnnualChartProps) {
               }}
             />
             <Tooltip
-              formatter={(value) => [
+              formatter={(value, name) => [
                 `${formatNumber(typeof value === "number" ? value : null)} mm`,
-                "Annual total",
+                name,
               ]}
             />
+            {showTrend ? <Legend wrapperStyle={{ fontSize: 12 }} /> : null}
             <Bar
               dataKey="total"
-              name="Annual total (mm)"
+              name={OBSERVED_LABEL}
+              fill="#0369a1"
               isAnimationActive={false}
-            >
-              {data.map((entry) => (
-                <Cell key={entry.year} fill="#0369a1" />
-              ))}
-            </Bar>
-          </BarChart>
+            />
+            {showTrend ? (
+              <Line
+                type="linear"
+                dataKey="fitted"
+                name={FITTED_LABEL}
+                stroke="#b45309"
+                strokeWidth={2}
+                strokeDasharray="6 4"
+                dot={false}
+                connectNulls={false}
+                isAnimationActive={false}
+              />
+            ) : null}
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
       {incomplete.length > 0 ? (

@@ -112,8 +112,15 @@ export interface MonthlyItem {
 
 export interface AnnualItem {
   year: number;
+  /** Observed annual total. */
   precipitation_total_mm: number | null;
   valid_months: number;
+  /**
+   * Backend-computed OLS fitted annual total (mm) for complete years in the
+   * regression; `null` otherwise. Contract selected in PR #6 review but not
+   * yet shipped by the backend, hence optional. Not a forecast.
+   */
+  ols_fitted_mm?: number | null;
 }
 
 export interface Statistics {
