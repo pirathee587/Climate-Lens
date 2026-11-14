@@ -40,7 +40,8 @@ const GUIDANCE: Record<string, { title: string; nextStep: string }> = {
   },
   [CLIENT_ERROR_CODES.network]: {
     title: "Cannot reach the TerraTrend API",
-    nextStep: "Check that the backend is running, then retry.",
+    nextStep:
+      "Start the backend (or check VITE_API_BASE_URL), then select Retry.",
   },
   [CLIENT_ERROR_CODES.timeout]: {
     title: "The request timed out",
