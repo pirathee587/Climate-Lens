@@ -14,6 +14,7 @@ from app.schemas.analysis import (
     Statistics,
 )
 from app.schemas.quality import ReviewedQualityPolicy
+from app.schemas.repository import ValidatedMonthlySeries
 from app.schemas.source import SourceDescriptor
 from app.services.catalog import CatalogService, get_catalog_service
 from app.services.statistics_adapter import (
@@ -38,7 +39,14 @@ class AnalysisService:
         self.quality_policies = quality_policies
 
     def analyze(self, request: AnalysisRequest) -> AnalysisResponse:
-        snapshots = self.catalog.validated_snapshots()
+        return self.analyze_validated(request, self.catalog.validated_snapshots())
+
+    def analyze_validated(
+        self,
+        request: AnalysisRequest,
+        snapshots: tuple[ValidatedMonthlySeries, ...],
+    ) -> AnalysisResponse:
+        """Internal orchestration over this request's already verified catalog."""
         selected = next(
             (
                 item

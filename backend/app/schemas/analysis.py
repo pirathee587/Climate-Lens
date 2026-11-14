@@ -1,4 +1,4 @@
-"""Future analysis/comparison contracts only; no data loading or calculations."""
+"""Analysis, comparison and reproducibility contracts; no calculations."""
 
 from enum import StrEnum
 from typing import Annotated, Literal
@@ -129,3 +129,50 @@ class ComparisonResponse(APIModel):
     left: AnalysisResponse
     right: AnalysisResponse
     warnings: list[str]
+
+    @model_validator(mode="after")
+    def valid_shared_years(self) -> "ComparisonResponse":
+        left_years = {
+            row.year
+            for row in self.left.annual
+            if row.valid_months == 12 and row.precipitation_total_mm is not None
+        }
+        right_years = {
+            row.year
+            for row in self.right.annual
+            if row.valid_months == 12 and row.precipitation_total_mm is not None
+        }
+        if self.shared_analyzed_years != sorted(left_years & right_years):
+            raise ValueError("shared years must match complete regional years")
+        if len(self.shared_analyzed_years) < 10:
+            raise ValueError("at least ten shared complete years are required")
+        if self.left.region.id == self.right.region.id:
+            raise ValueError("comparison regions must differ")
+        if self.left.analysis_id == self.right.analysis_id:
+            raise ValueError("comparison analyses require distinct IDs")
+        for side in (self.left, self.right):
+            if (
+                side.request.start_year != self.shared_requested_period.start_year
+                or side.request.end_year != self.shared_requested_period.end_year
+                or side.request.region_id != side.region.id
+                or any(
+                    not self.shared_requested_period.start_year
+                    <= row.year
+                    <= self.shared_requested_period.end_year
+                    for row in side.annual
+                )
+            ):
+                raise ValueError("comparison period/region is inconsistent")
+        return self
+
+
+class ReproducibilityMetadata(APIModel):
+    analysis_id: UUID
+    request: AnalysisRequest
+    region: RegionDescriptor
+    source: SourceDescriptor
+    normalized_units: dict[str, str]
+    statistics: Statistics
+    algorithm_version: NonEmpty
+    warnings: list[str]
+    scientific_limitations: list[str]

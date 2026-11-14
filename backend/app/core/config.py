@@ -24,7 +24,18 @@ class Settings(BaseModel):
     snapshot_quality_policies: tuple[ReviewedQualityPolicy, ...] = Field(
         default=(), max_length=2
     )
+    result_cache_ttl_seconds: int = Field(default=1200, ge=1, le=86400)
+    result_cache_max_entries: int = Field(default=100, ge=2, le=1000)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+
+    @field_validator(
+        "result_cache_ttl_seconds", "result_cache_max_entries", mode="before"
+    )
+    @classmethod
+    def cache_values_are_not_booleans(cls, value):
+        if isinstance(value, bool):
+            raise ValueError("cache settings must be positive bounded integers")
+        return value
 
     @field_validator("snapshot_approvals", "snapshot_quality_policies")
     @classmethod

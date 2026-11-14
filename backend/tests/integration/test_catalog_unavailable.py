@@ -20,5 +20,5 @@ def test_missing_data_does_not_break_liveness(client):
 
 
 @pytest.mark.parametrize("path", ["/api/v1/comparisons"])
-def test_future_features_are_not_exposed(client, path):
-    assert client.post(path, json={}).status_code == 404
+def test_comparison_invalid_request_is_validated(client, path):
+    assert client.post(path, json={}).status_code == 422

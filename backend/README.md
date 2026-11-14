@@ -1,18 +1,19 @@
-# TerraTrend backend — Pirathee Phase 03
+# TerraTrend backend — Pirathee Phase 04
 
 FastAPI integrates Harith's read-only verified repository and Gaja's statistical
 engine. **CONTRACT-READY BUT BLOCKED:** independently reviewed real NASA snapshots
 and quality policies are still missing. Default catalogs and analysis return 503.
-Health remains 200. No database, result cache, comparison or export is implemented.
+Health remains 200. Comparison, bounded result caching and exports are implemented;
+no database is used.
 
-## Phase 03 configuration and analysis
+## Verified source configuration and analysis
 
 `POST /api/v1/analyses` implements the existing AnalysisRequest/AnalysisResponse
 contract. Valid requests require both verified regions, matching source metadata,
 coverage within the manifest, a reviewed quality policy and ten complete years.
 The service delegates aggregation and trends to Gaja; it never converts units again.
 Incomplete annual totals stay null; actual analyzed years and scientific warnings
-are preserved. UUIDs identify responses only; retrieval is not implemented.
+are preserved. Successful responses are stored under their original server UUIDs.
 
 Two process environment settings are JSON arrays, empty by default:
 
@@ -36,7 +37,54 @@ returns 503 STATISTICS_ENGINE_UNAVAILABLE. Invalid scientific input is 422
 INVALID_ARGUMENT, insufficient complete years is 422 INSUFFICIENT_DATA, and numerical
 or invalid response failures are sanitized 500 ANALYSIS_ERROR.
 
-[Phase 03 delivery and validation report](PHASE03_REPORT.md).
+[Phase 03 report](PHASE03_REPORT.md) and [Phase 04 report](PHASE04_REPORT.md).
+
+## Comparison, retrieval and exports (Phase 04)
+
+POST /api/v1/comparisons reuses one validated catalog pass and runs each region
+independently through the existing AnalysisService and Gaja adapter. At least ten
+complete years must be shared. Returned shared_analyzed_years is the exact sorted
+intersection; the requested period stays unchanged. Each region's estimates use its
+own complete-year sample. Different samples are explicitly disclosed, never labeled
+matched-sample comparisons; regional slope differences are not significance-tested.
+Existing catalog incompatibilities remain fail-closed503. The final trusted-result
+compatibility defense uses409 only when evidence establishes incompatibility.
+
+Successful analyses and both sides of a fully successful comparison are retrievable:
+
+- GET /api/v1/analyses/{id}: original complete AnalysisResponse (canonical JSON).
+- GET /api/v1/analyses/{id}/export.csv: monthly CSV.
+- GET /api/v1/analyses/{id}/annual.csv: annual CSV.
+- GET /api/v1/analyses/{id}/metadata.json: provenance/units/method/limitations JSON.
+
+Unknown/expired/evicted IDs return404 NOT_FOUND; malformed UUIDs return422
+INVALID_ARGUMENT. Retrieval/downloads perform no source or scientific calls.
+CSV null numbers are blank, headers deterministic and dates ordered. Text cells
+that could become spreadsheet formulas are prefixed with an apostrophe; JSON keeps
+original identifiers. CSV quoting preserves commas, quotes, line breaks and Unicode.
+Filenames contain only server UUIDs and fixed suffixes; CORS exposes Content-Disposition.
+Monthly columns: region_id,period,precipitation_total_mm,valid_fraction,snapshot_id.
+Annual columns: region_id,year,precipitation_total_mm,valid_months,snapshot_id.
+
+Cache settings (process environment, bounded integers):
+
+| Variable | Default | Range |
+|---|---|---|
+| RESULT_CACHE_TTL_SECONDS | 1200 | 1..86400 seconds |
+| RESULT_CACHE_MAX_ENTRIES | 100 | 2..1000 entries |
+
+Minimum capacity two permits atomic comparison insertion. Fixed retained-JSON limits
+are 2 MiB per entry and 32 MiB total. The cache uses monotonic deadlines, synchronized
+access and deterministic FIFO eviction; reads do not extend TTL or reorder entries.
+Validated serialized copies prevent callers mutating cached content. Failed analyses
+and failed comparisons publish no results. Oversized results fail before insertion.
+Each application owns its cache; restart clears it. Run a single worker for P0:
+multiple workers/replicas do not share IDs. No Redis, SQLite or external cache.
+
+Requirements covered: FR-017 independent comparisons; FR-018 CSV/provenance; FR-019
+safe errors; NFR-011 missing-data integrity and NFR-014 source/year consistency.
+The comparison frontend owner must add shared_analyzed_years to its existing mirror
+and consume that backend field. Frontend source is unchanged in this phase.
 
 ## Local setup (Python 3.12)
 
@@ -101,6 +149,9 @@ non-browser clients can still call public endpoints.
 | `GET /api/v1/variables` | 503 by default; 200 with verified two-region repository |
 | `GET /api/v1/regions/presets` | 503 by default; 200 with verified two-region repository |
 | `POST /api/v1/analyses` | 503 by default; 200 with approved sources/policies and sufficient years |
+| `POST /api/v1/comparisons` | 503 by default; 200 with compatible sources and ten shared complete years |
+| `GET /api/v1/analyses/{id}` | 200 for retained result; 404 otherwise |
+| `GET /api/v1/analyses/{id}/export.csv`, `/annual.csv`, `/metadata.json` | 200 for retained result; 404 otherwise |
 | `GET /docs`, `GET /openapi.json` | 200 in development/test; 404 in production |
 
 ```json
@@ -121,9 +172,9 @@ also validates provenance, coverage and complete-year eligibility.
 From the repository root:
 
 ```bash
-docker build -f backend/Dockerfile -t terratrend-api:phase01 backend
+docker build -f backend/Dockerfile -t terratrend-api:phase04 backend
 docker run --rm -p 127.0.0.1:8000:8000 \
-  -e ALLOWED_ORIGINS=http://localhost:5173 terratrend-api:phase01
+  -e ALLOWED_ORIGINS=http://localhost:5173 terratrend-api:phase04
 curl http://localhost:8000/health
 ```
 
@@ -138,12 +189,12 @@ invocation. It uses read-only repository permissions and SHA-pinned actions; run
 lint, format, tests, pip check and vulnerability audit; builds an image without
 publishing; and checks non-root container health. There is no readiness bypass now
 that the backend exists. The existing separate secret-scanning workflow remains.
-Phase 03 delivery includes an explicitly authorized backend-only CI dispatch.
+Phase 04 delivery includes an explicitly authorized backend-only CI dispatch.
 
 ## Ownership and historical reports
 
 Harith owns `app/data/`; Gaja owns `app/statistics/`. Both modules are integrated
-without modifying their implementations. Phase 04 will implement comparison, a
+without modifying their implementations. Phase 04 implements comparison, a
 short-lived result cache and the agreed GET CSV export contract. Frontend fitted
 OLS points remain a separate additive contract change; existing schemas are reused.
 
