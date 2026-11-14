@@ -75,10 +75,10 @@ export function RegionMap({
   return (
     <div
       aria-label="Verified city-adjacent region map"
-      className={className}
+      className={`relative w-full overflow-hidden rounded-lg border border-slate-300 bg-slate-100 shadow-sm ${className ?? ""}`}
       role="application"
     >
-      <MapContainer bounds={mapBounds} style={{ minHeight: "320px" }}>
+      <MapContainer bounds={mapBounds} className="h-80 min-h-80 w-full sm:h-96">
         <MapViewport bounds={mapBounds} />
         <TileLayer
           attribution="&copy; OpenStreetMap contributors"
