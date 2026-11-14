@@ -16,9 +16,14 @@ No existing API/service/schema, data-loader, frontend or workflow file was chang
 
 ```python
 from app.statistics import (
-    AnnualObservation, MonthlyObservation, QualityPolicy,
-    aggregate_annual_precipitation, analyze_annual_trend,
-    InvalidDataError, InsufficientDataError, NumericalAnalysisError,
+    AnnualObservation,
+    MonthlyObservation,
+    QualityPolicy,
+    aggregate_annual_precipitation,
+    analyze_annual_trend,
+    InvalidDataError,
+    InsufficientDataError,
+    NumericalAnalysisError,
 )
 ```
 
@@ -246,11 +251,13 @@ A science-service call, not a new HTTP endpoint:
 
 ```python
 aggregation = aggregate_annual_precipitation(
-    monthly_inputs, policy=approved_quality_policy,
+    monthly_inputs,
+    policy=approved_quality_policy,
     year_range=(requested_start_year, requested_end_year),
 )
 trend = analyze_annual_trend(
-    aggregation.observations, alpha=request_alpha,
+    aggregation.observations,
+    alpha=request_alpha,
     excluded_years=aggregation.excluded_years,
 )
 statistics_json = trend.statistics_payload()
@@ -271,7 +278,16 @@ Repository: pirathee587/Climate-Lens.
 Branch: feat/tt-04-gaja-statistics-engine.
 Base: origin/feat/tt-05-pirathee-phase02-nasa-integration (bb3dfb4).
 Required message: feat(statistics): implement annual rainfall trend analysis engine.
-Commit/push verification and actual hosted CI result will be added after delivery.
+Implementation commit: `e3b40dae7e82dd0a2de5bb00ad674696708f513e`.
+Push succeeded and remote SHA was confirmed via git ls-remote and the GitHub branch API.
+[Feature branch](https://github.com/pirathee587/Climate-Lens/tree/feat/tt-04-gaja-statistics-engine).
+
+Initial hosted run [43578361840](https://github.com/pirathee587/Climate-Lens/actions/runs/43578361840)
+failed the report's fenced Python formatting before hosted tests ran. The report was
+written after the earlier local format check; its examples needed Ruff formatting.
+The examples are now formatted and the complete formatting check is rerun before
+committing. Scientific Python code and local test results were unchanged by this fix.
+A new backend-only run will verify the corrected delivery.
 Only the listed Gaja code/tests, necessary dependency files and documentation are staged.
 No git add . / git add -A, force push, PR, merge, deployment or Phase 03 work is performed.
 
