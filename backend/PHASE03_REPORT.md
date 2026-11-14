@@ -160,15 +160,25 @@ comparison/export404. No NASA access, database or credentials required. Containe
 
 ## 13. GitHub delivery
 
-Implementation commit/push verification will be recorded after local checks.
-Suggested message: feat(backend): integrate NASA repository and statistical analysis API.
-The report and commit explicitly retain the real-data blocker.
+Implementation commit: 9c1eb5754c1b86ef2fb25be78ce6ca6b12bc068a.
+Message: feat(backend): integrate NASA repository and statistical analysis API.
+Push succeeded; git ls-remote matched that exact SHA. Tracking branch configured.
+A separate documentation-only delivery commit follows the successful hosted run;
+its SHA is available from branch HEAD, and does not change tested application code.
+The original main checkout's unrelated documentation edit remains untouched.
 
 ## 14. Hosted backend CI
 
-Pending the authorized branch push and backend-ci.yml workflow_dispatch.
-No earlier Harith/Gaja CI run is claimed as Phase 03 evidence.
-A later documentation-only commit will record the actual implementation SHA/run.
+Backend CI workflow_dispatch run 43581433515: **SUCCESS**.
+https://github.com/pirathee587/Climate-Lens/actions/runs/43581433515
+Actual tested SHA: 9c1eb5754c1b86ef2fb25be78ce6ca6b12bc068a.
+Hosted lint, formatting, 320 tests, pip check, vulnerability audit, Docker build
+and non-root health smoke all succeeded. Job logs and step conclusions inspected.
+Run completed 2026-11-14T09:38:28Z. No unrelated workflow was dispatched.
+Final local post-report Ruff checks passed (72 files formatted), git diff --check
+passed, and the repeated Gitleaks directory scan found no leaks (555.12 KB).
+The following documentation-only commit records these results; hosted CI tests
+the implementation SHA above, not that later report commit.
 
 ## 15. Remaining blockers
 

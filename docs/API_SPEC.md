@@ -245,8 +245,9 @@ FastAPI's default validation error schema may be transformed at a central except
 ## Phase 03 implementation and availability
 
 `POST /api/v1/analyses` is implemented using the existing request/response schemas.
-Default production catalogs and analysis remain 503 until both independently
-reviewed NASA snapshots and snapshot-bound quality policies are configured.
+Default production catalogs remain 503 until both independently reviewed NASA
+snapshots are configured. Analysis additionally requires snapshot-bound reviewed
+quality policies.
 A successful response uses a new UUID but is not persisted; GET result retrieval,
 comparison and CSV export remain unimplemented. Monthly values are normalized
 source records; annual summaries and statistics come from Gaja's engine.
