@@ -1,7 +1,7 @@
 # TT-02 — NASA source verification
 
-**Owner:** Harith  
-**Status:** Source metadata verified from an authenticated NASA Earthdata granule; regional ROI definitions remain subject to team approval.  
+**Owner:** Harith
+**Status:** Source metadata verified from an authenticated NASA Earthdata granule; regional ROI definitions remain subject to team approval.
 **Scope:** Metadata and acquisition preparation only. No historical observations or production snapshots are created by TT-02.
 
 ## Verified source
