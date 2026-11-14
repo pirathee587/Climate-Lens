@@ -212,7 +212,7 @@ Backend directory:
 ```text
 .venv/bin/python -m pip install -r requirements-dev.txt     PASS
 .venv/bin/python -m ruff check .                           All checks passed!
-.venv/bin/python -m ruff format --check .                  48 files formatted
+.venv/bin/python -m ruff format --check .                  49 files formatted (including report examples)
 .venv/bin/python -m pytest -q                              203 passed, 1 warning in 1.72s
 .venv/bin/python -m pip check                             No broken requirements found
 .venv/bin/python -m pip_audit -r requirements-dev.lock --no-deps --disable-pip
@@ -285,14 +285,33 @@ Push succeeded and remote SHA was confirmed via git ls-remote and the GitHub bra
 Initial hosted run [43578361840](https://github.com/pirathee587/Climate-Lens/actions/runs/43578361840)
 failed the report's fenced Python formatting before hosted tests ran. The report was
 written after the earlier local format check; its examples needed Ruff formatting.
-The examples are now formatted and the complete formatting check is rerun before
-committing. Scientific Python code and local test results were unchanged by this fix.
-A new backend-only run will verify the corrected delivery.
+The examples were formatted in commit `c047c1ea81c3de7817765176e91448ad19bc3d6d`.
+The complete local format check passed. Scientific Python code and local test results
+were unchanged by this documentation fix.
+
+**GitHub-hosted Backend CI: SUCCESS** on corrected commit
+`c047c1ea81c3de7817765176e91448ad19bc3d6d`.
+[Successful run 43578684974](https://github.com/pirathee587/Climate-Lens/actions/runs/43578684974).
+Actual hosted logs: 203 tests passed, 1 upstream warning in 1.49s; Ruff lint passed;
+49 files formatted; pip check passed; no known vulnerabilities; Docker image build
+and non-root health smoke succeeded. Every backend job step succeeded.
+This subsequent delivery-record commit changes Markdown only; tested scientific code
+and workflow are unchanged. The final documentation commit SHA is in branch history.
 Only the listed Gaja code/tests, necessary dependency files and documentation are staged.
 No git add . / git add -A, force push, PR, merge, deployment or Phase 03 work is performed.
 
 The existing Backend CI supports main pushes, relevant PRs and manual dispatch.
-Feature pushes do not trigger it; an authorized backend-only dispatch will be run.
-Local results above are not GitHub-hosted CI evidence.
+Feature pushes do not trigger it. The authorized backend-only dispatch was executed,
+and actual jobs/logs were inspected using:
+
+```text
+gh workflow run backend-ci.yml --ref feat/tt-04-gaja-statistics-engine --repo pirathee587/Climate-Lens
+gh run view 43578684974 --repo pirathee587/Climate-Lens --json conclusion,status,headSha,url,jobs
+gh run view 43578684974 --repo pirathee587/Climate-Lens --log
+```
+
+Hosted results are separately identified above. No unrelated workflow was dispatched.
+Implementation and formatting commits were pushed and remote SHAs verified; no code
+changes followed the successful hosted run.
 
 Final status: **COMPLETE for TT-04**, with the explicit scientific limitations above.
