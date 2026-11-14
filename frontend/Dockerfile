@@ -1,9 +1,13 @@
-# Phase 01 template: requires package.json, package-lock.json and a Vite app.
 FROM node:22-bookworm-slim AS development
 WORKDIR /app
-COPY --chown=node:node . .
-RUN npm ci
+# Install and build as the unprivileged `node` user. /app and node_modules
+# must be node-owned so `tsc -b` (node_modules/.tmp) and `vite build`
+# (dist/) can write in the build stage.
+RUN chown node:node /app
 USER node
+COPY --chown=node:node package.json package-lock.json ./
+RUN npm ci
+COPY --chown=node:node . .
 EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 

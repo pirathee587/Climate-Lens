@@ -76,7 +76,7 @@ terratrend/
 │   ├── TEST_STRATEGY.md      # test plan and requirements traceability
 │   ├── DELIVERY_PLAN.md      # 48-hour schedule, GitHub issues, risks
 │   └── RESOURCES.md          # official resources and citations
-├── frontend/                  # future React application — NOT created here
+├── frontend/                  # React + TypeScript app (TT-06/07/08/09) — see frontend/README.md
 ├── backend/                   # future FastAPI source — NOT created here
 ├── data/demo/                 # future verified snapshot files — NOT provided here
 └── .github/workflows/         # future CI — NOT created here

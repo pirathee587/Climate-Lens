@@ -59,7 +59,7 @@ function toApiError(error: unknown): ComparisonApiError {
     const apiError = error.error as Partial<ComparisonApiError>;
     return {
       code: typeof apiError.code === "string" ? apiError.code : undefined,
-      message: apiError.message,
+      message: error.error.message,
       details: apiError.details,
       request_id:
         typeof apiError.request_id === "string"

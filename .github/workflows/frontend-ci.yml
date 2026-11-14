@@ -30,12 +30,13 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - name: Install, lint, typecheck, build and audit
+      - name: Install, lint, typecheck, test, build and audit
         if: steps.ready.outputs.enabled == 'true'
         working-directory: frontend
         run: |
           npm ci
           npm run lint
           npm run typecheck
+          npm run test -- --run
           npm run build
           npm audit --audit-level=high
