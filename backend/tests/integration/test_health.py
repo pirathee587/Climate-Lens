@@ -26,6 +26,7 @@ def test_development_docs_and_openapi(client):
         "/health",
         "/api/v1/variables",
         "/api/v1/regions/presets",
+        "/api/v1/analyses",
     }
     assert "ErrorResponse" in schema["components"]["schemas"]
 

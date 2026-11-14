@@ -3,6 +3,8 @@
 from collections.abc import Sequence
 from typing import Protocol
 
+from fastapi import Request
+
 from app.schemas.repository import NormalizedMonthlyRecord, SnapshotDescriptor
 from app.schemas.source import RegionDescriptor
 
@@ -34,7 +36,11 @@ class UnavailableSnapshotRepository:
         return ()
 
 
-def get_snapshot_repository() -> SnapshotRepository:
-    # Wire a reviewed Harith adapter here in a later explicitly authorized change.
-    # Merely dropping CSV/JSON files into SNAPSHOT_ROOT never activates catalogs.
-    return UnavailableSnapshotRepository()
+def get_snapshot_repository(request: Request) -> SnapshotRepository:
+    settings = request.app.state.settings
+    if not settings.snapshot_approvals:
+        return UnavailableSnapshotRepository()
+    # Operator approvals only; no scanning, automatic hashes or review creation.
+    from app.data.repository_adapter import HarithSnapshotRepository
+
+    return HarithSnapshotRepository(settings.snapshot_root, settings.snapshot_approvals)
