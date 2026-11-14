@@ -229,13 +229,34 @@ Branch: feat/tt-05-pirathee-phase02-nasa-integration
 Required truthful message:
 feat(backend): add NASA repository integration contract and catalog readiness
 
-Delivery verification will be recorded after the implementation commit/push.
+Implementation commit: `245d75f2eace3a26fb8e2075bb29ff4fed175f31`.
+Push: SUCCESS (`git push -u origin feat/tt-05-pirathee-phase02-nasa-integration`).
+Remote `git ls-remote --heads` and GitHub branch API both confirmed that exact SHA.
+Verified branch URL:
+https://github.com/pirathee587/Climate-Lens/tree/feat/tt-05-pirathee-phase02-nasa-integration
+
+GitHub-hosted Backend CI: **SUCCESS** via authorized backend-only manual dispatch.
+Run: https://github.com/pirathee587/Climate-Lens/actions/runs/43572320650
+Tested SHA: `245d75f2eace3a26fb8e2075bb29ff4fed175f31`.
+Actual hosted logs: Ruff pass; 35 files formatted; 139 tests passed, 1 upstream
+warning in 0.31s; pip check pass; no known vulnerabilities; Docker build and non-root
+container health smoke pass. `gh run view` confirmed every backend job step succeeded.
+This delivery-report follow-up changes Markdown only; the tested backend code and
+workflow are unchanged. Its commit SHA is available in branch history.
 Only explicitly enumerated approved files are staged; no git add . or git add -A.
 No PR/merge/deployment is authorized or performed.
 
 Backend CI is configured for relevant main pushes, relevant PRs and manual dispatch;
-feature branch pushes do not start it. Backend-only manual dispatch will be attempted
-with the authenticated GitHub CLI after push. Local checks are not hosted CI evidence.
+feature branch pushes do not start it. Executed:
+
+```text
+gh workflow run backend-ci.yml --ref feat/tt-05-pirathee-phase02-nasa-integration --repo pirathee587/Climate-Lens
+gh run watch 43572320650 --repo pirathee587/Climate-Lens --exit-status --interval 10
+gh run view 43572320650 --repo pirathee587/Climate-Lens --json conclusion,status,headSha,url,jobs
+```
+
+GitHub-hosted results above were retrieved from that actual run, separately from
+local test evidence. No unrelated workflow was manually dispatched.
 
 ## I. Final status
 
