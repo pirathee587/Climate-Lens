@@ -6,7 +6,11 @@ from typing import Annotated
 from fastapi import Depends, Request
 
 from app.core.errors import APIError
-from app.schemas.repository import NormalizedMonthlyRecord, SnapshotDescriptor
+from app.schemas.repository import (
+    NormalizedMonthlyRecord,
+    SnapshotDescriptor,
+    ValidatedMonthlySeries,
+)
 from app.schemas.source import RegionDescriptor, RegionsResponse, VariablesResponse
 from app.services.snapshot_repository import SnapshotRepository, get_snapshot_repository
 from app.services.snapshot_validation import validate_series
@@ -27,7 +31,8 @@ class CatalogService:
         self.repository = repository
         self.root = root
 
-    def _validated_catalog(self) -> tuple[SnapshotDescriptor, ...]:
+    def validated_snapshots(self) -> tuple[ValidatedMonthlySeries, ...]:
+        """Validate once and return the exact descriptor/records used for that check."""
         try:
             # Reparse model dumps so mutated or model_construct-created nested DTOs
             # cannot bypass validation at this integration boundary.
@@ -47,6 +52,7 @@ class CatalogService:
             if len(regions) != 2 or {r.id for r in regions} != set(REQUIRED_REGIONS):
                 raise ValueError("region catalog is incomplete")
             region_map = {region.id: region for region in regions}
+            validated = []
             for descriptor in descriptors:
                 if descriptor.variable != first.variable:
                     raise ValueError("dataset variants or coverage cannot be mixed")
@@ -73,14 +79,20 @@ class CatalogService:
                         descriptor.region.id,
                     )
                 )
-                validate_series(descriptor, observations, self.root)
+                validated.append(validate_series(descriptor, observations, self.root))
             return tuple(
-                sorted(descriptors, key=lambda d: REQUIRED_REGIONS.index(d.region.id))
+                sorted(
+                    validated,
+                    key=lambda item: REQUIRED_REGIONS.index(item.descriptor.region.id),
+                )
             )
         except Exception:
             # Adapter failures, missing files and malformed DTOs are all unavailable.
             # No exception messages/private paths/raw records reach responses or logs.
             raise dataset_unavailable() from None
+
+    def _validated_catalog(self) -> tuple[SnapshotDescriptor, ...]:
+        return tuple(item.descriptor for item in self.validated_snapshots())
 
     def variables(self) -> VariablesResponse:
         descriptors = self._validated_catalog()

@@ -38,8 +38,8 @@ def test_catalogs_match_verified_adapter_contract(synthetic_client):
     assert "snapshot_path" not in regions.text + variables.text
     assert "2011-01" in variables.text
     assert client.get("/health").status_code == 200
-    assert client.post("/api/v1/analyses", json={}).status_code == 404
-    assert client.post("/api/v1/comparisons", json={}).status_code == 404
+    assert client.post("/api/v1/analyses", json={}).status_code == 422
+    assert client.post("/api/v1/comparisons", json={}).status_code == 422
 
 
 @pytest.mark.parametrize(

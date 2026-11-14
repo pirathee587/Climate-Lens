@@ -1,4 +1,4 @@
-"""TT-01 backend foundation. No dataset/science integration in this phase."""
+"""TerraTrend API with verified analysis, comparison and application-local results."""
 
 from fastapi import FastAPI
 
@@ -12,6 +12,7 @@ from app.core.logging import (
     configure_logging,
 )
 from app.schemas.common import ErrorResponse, HealthResponse
+from app.services.result_cache import ResultCache
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -31,6 +32,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         },
     )
     app.state.settings = settings
+    app.state.result_cache = ResultCache(
+        ttl_seconds=settings.result_cache_ttl_seconds,
+        max_entries=settings.result_cache_max_entries,
+    )
     register_error_handlers(app)
     app.include_router(router)
 
@@ -45,7 +50,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_credentials=False,
         allow_methods=["GET", "POST"],
         allow_headers=["Content-Type"],
-        expose_headers=["X-Request-ID"],
+        expose_headers=["X-Request-ID", "Content-Disposition"],
     )
     app.add_middleware(RequestContextMiddleware)
     return app

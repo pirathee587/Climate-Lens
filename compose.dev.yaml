@@ -1,4 +1,4 @@
-# Run: docker compose -f compose.yaml -f compose.dev.yaml up --build
+# Requires Compose >=2.24.4 for !override; application source only, no host .env mounts.
 services:
   backend:
     build:
@@ -8,10 +8,16 @@ services:
     volumes:
       - ./backend/app:/app/app:ro
   frontend:
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000/api/v1}
     build:
       target: development
+    # Vite writes its dependency cache; production root filesystem stays read-only.
+    read_only: false
     ports: !override
-      - "127.0.0.1:5173:5173"
-    volumes:
+      - "127.0.0.1:${FRONTEND_HOST_PORT:-5173}:5173"
+    volumes: !override
       - ./frontend/src:/app/src:ro
       - ./frontend/public:/app/public:ro
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:5173/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]

@@ -26,6 +26,12 @@ def test_development_docs_and_openapi(client):
         "/health",
         "/api/v1/variables",
         "/api/v1/regions/presets",
+        "/api/v1/analyses",
+        "/api/v1/comparisons",
+        "/api/v1/analyses/{analysis_id}",
+        "/api/v1/analyses/{analysis_id}/export.csv",
+        "/api/v1/analyses/{analysis_id}/annual.csv",
+        "/api/v1/analyses/{analysis_id}/metadata.json",
     }
     assert "ErrorResponse" in schema["components"]["schemas"]
 

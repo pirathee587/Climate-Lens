@@ -1,11 +1,15 @@
 """Explicit environment configuration; no implicit .env or credential loading."""
 
+import json
 import os
 from pathlib import Path
 from typing import Literal
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from app.data.repository_adapter import ArtifactApproval
+from app.schemas.quality import ReviewedQualityPolicy
 
 DEFAULT_SNAPSHOT_ROOT = Path(__file__).resolve().parents[3] / "data" / "demo"
 
@@ -16,7 +20,35 @@ class Settings(BaseModel):
     app_port: int = Field(default=8000, ge=1, le=65535)
     allowed_origins: tuple[str, ...] = ("http://localhost:5173",)
     snapshot_root: Path = DEFAULT_SNAPSHOT_ROOT
+    snapshot_approvals: tuple[ArtifactApproval, ...] = Field(default=(), max_length=2)
+    snapshot_quality_policies: tuple[ReviewedQualityPolicy, ...] = Field(
+        default=(), max_length=2
+    )
+    result_cache_ttl_seconds: int = Field(default=1200, ge=1, le=86400)
+    result_cache_max_entries: int = Field(default=100, ge=2, le=1000)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
+
+    @field_validator(
+        "result_cache_ttl_seconds", "result_cache_max_entries", mode="before"
+    )
+    @classmethod
+    def cache_values_are_not_booleans(cls, value):
+        if isinstance(value, bool):
+            raise ValueError("cache settings must be positive bounded integers")
+        return value
+
+    @field_validator("snapshot_approvals", "snapshot_quality_policies")
+    @classmethod
+    def unique_review_records(cls, records):
+        keys = [
+            record.descriptor_path
+            if isinstance(record, ArtifactApproval)
+            else record.snapshot_sha256.lower()
+            for record in records
+        ]
+        if len(keys) != len(set(keys)):
+            raise ValueError("duplicate snapshot review configuration")
+        return records
 
     @field_validator("allowed_origins")
     @classmethod
@@ -47,6 +79,9 @@ class Settings(BaseModel):
         for name in cls.model_fields:
             raw = os.environ.get(name.upper())
             if raw is not None:
+                if name in {"snapshot_approvals", "snapshot_quality_policies"}:
+                    values[name] = json.loads(raw)
+                    continue
                 values[name] = (
                     tuple(s.strip() for s in raw.split(",") if s.strip())
                     if name == "allowed_origins"
